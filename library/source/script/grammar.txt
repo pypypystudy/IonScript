@@ -1,0 +1,26 @@
+s := block EOS
+
+block := {statement}*
+
+statement := expression
+statement := function
+statement := ifblock
+
+function := DEF identifier {'(' arguments ')'} NEWLINE block END
+
+ifblock := IF expression NEWLINE block elseblock
+elseblock := END NEWLINE | ELSE ifblock | ELSE NEWLINE block END NEWLINE
+
+ifblock := IF expression NEWLINE block elseblock
+elseblock := END NEWLINE | ELSE ifblock | ELSE NEWLINE block END NEWLINE
+
+expression := term ( '+' | '-' ) expression
+
+term := factor ( '*' | '/' ) term
+
+factor := STRING
+factor := IDENTIFIER
+factor := INTEGER
+factor := DOUBLE
+factor := '(' expression ')'
+

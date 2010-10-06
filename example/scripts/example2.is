@@ -1,0 +1,5 @@
+def f(x)
+    return x - 10;
+end
+
+assert(f(11), "asd")

@@ -1,0 +1,15 @@
+def concat(a,b)
+   return a + b
+end
+
+temp = "He"
+
+for i = 0; i < 2; i += 1
+   temp += "l"
+end
+
+temp = concat(temp,"o")
+
+str = concat(temp, " World" + "!" * 3) 
+
+print(str)
