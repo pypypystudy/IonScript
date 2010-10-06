@@ -70,7 +70,16 @@ Lexer::TokenType Lexer::nextToken () {
                   mText += c;
                   state = 2;
                   break;
-
+                  // start BREAK
+               case 'b':
+                  mText += 'b';
+                  state = 113;
+                  break;
+                  // start CONTINUE
+               case 'c':
+                  mText += 'c';
+                  state = 118;
+                  break;
                   // Start IF/IN/IDENTIFIER
                case 'i':
                   mText += 'i';
@@ -129,8 +138,6 @@ Lexer::TokenType Lexer::nextToken () {
                   break;
 
                   // Start IDENTIF
-               case 'b':
-               case 'c':
                case 'g':
                case 'h':
                case 'j':
@@ -1058,6 +1065,164 @@ Lexer::TokenType Lexer::nextToken () {
                mSource.unget();
                throw LexicalErrorException(mLine, c);
             }
+            break;
+            /*********************************************************************************************************/
+            /* break
+             */
+         case 113: //b
+            if (c == 'r') {
+               mText += 'r';
+               state = 114;
+            } else if (isIdentifier(c)) {
+               mText += c;
+               state = 4;
+            } else {
+               mSource.unget();
+               return T_IDENTIFIER;
+            }
+            break;
+         case 114: //br
+            if (c == 'e') {
+               mText += 'e';
+               state = 115;
+            } else if (isIdentifier(c)) {
+               mText += c;
+               state = 4;
+            } else {
+               mSource.unget();
+               return T_IDENTIFIER;
+            }
+            break;
+         case 115: //bre
+            if (c == 'a') {
+               mText += 'a';
+               state = 116;
+            } else if (isIdentifier(c)) {
+               mText += c;
+               state = 4;
+            } else {
+               mSource.unget();
+               return T_IDENTIFIER;
+            }
+            break;
+         case 116: //brea
+            if (c == 'k') {
+               mText += 'k';
+               state = 117;
+            } else if (isIdentifier(c)) {
+               mText += c;
+               state = 4;
+            } else {
+               mSource.unget();
+               return T_IDENTIFIER;
+            }
+            break;
+         case 117: //break
+            if (isIdentifier(c)) {
+               mText += c;
+               state = 4;
+            } else {
+               mSource.unget();
+               return T_BREAK;
+            }
+            break;
+
+            /*********************************************************************************************************/
+            /* continue
+             */
+         case 118: //c
+            if (c == 'o') {
+               mText += 'o';
+               state = 119;
+            } else if (isIdentifier(c)) {
+               mText += c;
+               state = 4;
+            } else {
+               mSource.unget();
+               return T_IDENTIFIER;
+            }
+            break;
+         case 119: //co
+            if (c == 'n') {
+               mText += 'n';
+               state = 120;
+            } else if (isIdentifier(c)) {
+               mText += c;
+               state = 4;
+            } else {
+               mSource.unget();
+               return T_IDENTIFIER;
+            }
+            break;
+         case 120: //con
+            if (c == 't') {
+               mText += 't';
+               state = 121;
+            } else if (isIdentifier(c)) {
+               mText += c;
+               state = 4;
+            } else {
+               mSource.unget();
+               return T_IDENTIFIER;
+            }
+            break;
+         case 121: //cont
+            if (c == 'i') {
+               mText += 'i';
+               state = 122;
+            } else if (isIdentifier(c)) {
+               mText += c;
+               state = 4;
+            } else {
+               mSource.unget();
+               return T_IDENTIFIER;
+            }
+            break;
+         case 122: //conti
+            if (c == 'n') {
+               mText += 'n';
+               state = 123;
+            } else if (isIdentifier(c)) {
+               mText += c;
+               state = 4;
+            } else {
+               mSource.unget();
+               return T_IDENTIFIER;
+            }
+            break;
+         case 123: //contin
+            if (c == 'u') {
+               mText += 'u';
+               state = 124;
+            } else if (isIdentifier(c)) {
+               mText += c;
+               state = 4;
+            } else {
+               mSource.unget();
+               return T_IDENTIFIER;
+            }
+            break;
+         case 124: //continu
+            if (c == 'e') {
+               mText += 'e';
+               state = 125;
+            } else if (isIdentifier(c)) {
+               mText += c;
+               state = 4;
+            } else {
+               mSource.unget();
+               return T_IDENTIFIER;
+            }
+            break;
+         case 125: //continue
+            if (isIdentifier(c)) {
+               mText += c;
+               state = 4;
+            } else {
+               mSource.unget();
+               return T_CONTINUE;
+            }
+            break;
       }
    }
    return T_EOS;
