@@ -1,0 +1,14 @@
+*/build
+*/bin
+*/include
+*/doc/
+TODO
+.todo
+*.bat
+*.dll
+*.exe
+*.lnk
+*.o
+*.a
+gmon.out
+*/doc
