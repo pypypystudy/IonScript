@@ -22,6 +22,7 @@ SyntaxTree::~SyntaxTree () {
 SyntaxTree* SyntaxTree::createChild () {
    SyntaxTree* tree = new SyntaxTree();
    tree->mpParent = this;
+   tree->sourceLineNumber = sourceLineNumber;
    mChildren.push_back(tree);
    return tree;
 }
@@ -32,6 +33,7 @@ SyntaxTree* SyntaxTree::copyOnNewChild () {
    tree->mpParent = this;
    tree->type = type;
    tree->mChildren = mChildren;
+   tree->sourceLineNumber = sourceLineNumber;
 
    memcpy(&tree->number, &number, sizeof (double));
 
@@ -62,6 +64,7 @@ void SyntaxTree::copyTo(SyntaxTree& tree) const {
    tree.type = type;
    memcpy(&tree.number, &number, sizeof (double));
    tree.str = str;
+   tree.sourceLineNumber = sourceLineNumber;
 
    std::list<SyntaxTree*>::const_iterator it;
    for (it = mChildren.begin(); it != mChildren.end(); ++it)

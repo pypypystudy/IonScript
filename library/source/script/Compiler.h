@@ -55,7 +55,7 @@ namespace ion {
          void checkVariablesDefinition (const SyntaxTree& tree) const;
          void checkComparisonConsistency (const SyntaxTree& tree) const;
 
-         void error (const std::string& error) const;
+         void error (size_t line, const std::string& error) const;
 
       };
    }

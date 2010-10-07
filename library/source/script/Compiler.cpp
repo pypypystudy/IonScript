@@ -259,11 +259,11 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
                      else
                         ss << "It must be between " << info.minArgumentsCount << " and " << info.maxArgumentsCount;
                      ss << " while it is " << tree.getChildren().size() << ".";
-                     error(ss.str());
+                     error(tree.sourceLineNumber, ss.str());
                   }
 
                } else
-                  error("Could not found function \"" + tree.str + "\".");
+                  error(tree.sourceLineNumber, "Could not found function \"" + tree.str + "\".");
             } else
                loc = sfit->second;
          }
@@ -403,7 +403,7 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
       case SyntaxTree::TYPE_ASSIGNEMENT:
       {
          if (tree.left()->type != SyntaxTree::TYPE_VARIABLE && tree.left()->type != SyntaxTree::TYPE_CONTAINER_ELEMENT)
-            error("In an assignement, left value must be a varible or a container element.");
+            error(tree.sourceLineNumber, "In an assignement, left value must be a varible or a container element.");
 
          location_t listLoc = 0, indexLoc = 0, result = 0;
 
@@ -518,13 +518,13 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
 
 
       default:
-         error("unsupported feature.");
+         error(tree.sourceLineNumber, "unsupported feature.");
    }
    return 0;
 }
 
-void Compiler::error (const std::string & error) const {
-   throw SemanticError(0, error);
+void Compiler::error (size_t line, const std::string & error) const {
+   throw SemanticError(line, error);
 }
 
 void Compiler::compileExpressionNodeChildren (const SyntaxTree& node, BytecodeWriter& output, location_t target, OpCode op, small_size_t& nRegisters, size_t& nDeclaredValues, bool declareOnly) {
@@ -566,7 +566,7 @@ void Compiler::checkVariablesDefinition (const SyntaxTree & tree) const {
    } else if (tree.type == SyntaxTree::TYPE_VARIABLE) {
       location_t loc;
       if (!findLocalName(tree.str, loc))
-         error("undefined variable \"" + tree.str + "\".");
+         error(tree.sourceLineNumber, "undefined variable \"" + tree.str + "\".");
    } else {
       std::list<SyntaxTree*>::const_iterator it;
       for (it = tree.getChildren().begin(); it != tree.getChildren().end(); it++)
@@ -577,14 +577,14 @@ void Compiler::checkVariablesDefinition (const SyntaxTree & tree) const {
 void Compiler::checkComparisonConsistency (const SyntaxTree& tree) const {
    if (tree.left()->type == SyntaxTree::TYPE_NIL ||
       tree.right()->type == SyntaxTree::TYPE_NIL)
-      error("cannot compare disequality of a nil value.");
+      error(tree.sourceLineNumber, "cannot compare disequality of a nil value.");
    else if (tree.left()->type == SyntaxTree::TYPE_BOOLEAN ||
       tree.right()->type == SyntaxTree::TYPE_BOOLEAN)
-      error("cannot compare disequality of a boolean.");
+      error(tree.sourceLineNumber, "cannot compare disequality of a boolean.");
    else if ((tree.left()->type == SyntaxTree::TYPE_NUMBER ||
       tree.left()->type == SyntaxTree::TYPE_STRING) && (
       tree.right()->type == SyntaxTree::TYPE_NUMBER ||
       tree.right()->type == SyntaxTree::TYPE_STRING) &&
       tree.left()->type != tree.right()->type)
-      error("disequality involves operands of different type.");
+      error(tree.sourceLineNumber, "disequality involves operands of different type.");
 }

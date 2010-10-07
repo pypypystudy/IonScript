@@ -60,44 +60,59 @@ void Parser::endOfStatement () {
 
 //
 
-void Parser::block (SyntaxTree& tree, bool insideFunction) {
+void Parser::block (SyntaxTree& tree, int state) {
    tree.type = SyntaxTree::TYPE_BLOCK;
    while (true) {
       while (mTokenType == Lexer::T_NEWLINE || mTokenType == Lexer::T_SEMICOLON)
          nextToken();
       if (mTokenType == Lexer::T_EOS || mTokenType == Lexer::T_ELSE || mTokenType == Lexer::T_END)
          break;
-      statement(*tree.createChild(), insideFunction);
+      statement(*tree.createChild(), state);
    }
 }
 
-void Parser::statement (SyntaxTree& tree, bool insideFunction) {
+void Parser::statement (SyntaxTree& tree, int state) {
+   tree.sourceLineNumber = mLexer.getLine();
    switch (mTokenType) {
       case Lexer::T_IF:
-         ifblock(tree, insideFunction);
+         ifblock(tree, state);
          break;
 
       case Lexer::T_WHILE:
-         whileblock(tree, insideFunction);
+         whileblock(tree, state);
          break;
 
       case Lexer::T_FOR:
-         forblock(tree, insideFunction);
+         forblock(tree, state);
          break;
 
       case Lexer::T_DEF:
-         if (insideFunction)
+         if (state & STATE_INSIDE_FUNCTION)
             error();
-         function(tree);
+         functionDefinition(tree);
          break;
 
       case Lexer::T_RETURN:
-         if (!insideFunction)
+         if (!(state & STATE_INSIDE_FUNCTION))
             error();
          nextToken();
          tree.type = SyntaxTree::TYPE_RETURN;
          if (mTokenType != Lexer::T_NEWLINE)
             expression(*tree.createChild());
+         break;
+
+      case Lexer::T_CONTINUE:
+         if (!(state & STATE_INSIDE_LOOP))
+            error();
+         nextToken();
+         tree.type = SyntaxTree::TYPE_CONTINUE;
+         break;
+
+      case Lexer::T_BREAK:
+         if (!(state & STATE_INSIDE_LOOP))
+            error();
+         nextToken();
+         tree.type = SyntaxTree::TYPE_BREAK;
          break;
 
       default:
@@ -108,7 +123,7 @@ void Parser::statement (SyntaxTree& tree, bool insideFunction) {
    tree.simplify();
 }
 
-void Parser::function (SyntaxTree& tree) {
+void Parser::functionDefinition (SyntaxTree& tree) {
    expect(Lexer::T_DEF);
    tree.type = SyntaxTree::TYPE_FUNCTION_DEF;
    tree.str = mLexer.getString();
@@ -128,12 +143,12 @@ void Parser::function (SyntaxTree& tree) {
          } while (!accept(Lexer::T_RIGHT_ROUND_BRACKET));
    }
 
-   block(*tree.createChild(), true);
+   block(*tree.createChild(), STATE_INSIDE_FUNCTION);
    expect(Lexer::T_END);
    endOfStatement();
 }
 
-void Parser::ifblock (SyntaxTree& tree, bool insideFunction) {
+void Parser::ifblock (SyntaxTree& tree, int state) {
    expect(Lexer::T_IF);
    tree.type = SyntaxTree::TYPE_IF;
    expression(*tree.createChild());
@@ -141,31 +156,31 @@ void Parser::ifblock (SyntaxTree& tree, bool insideFunction) {
    if (!accept(Lexer::T_NEWLINE))
       expect(Lexer::T_COLON);
 
-   block(*tree.createChild(), insideFunction);
+   block(*tree.createChild(), state);
 
    if (!accept(Lexer::T_END)) {
       if (mTokenType == Lexer::T_ELSE)
-         elseblock(*tree.createChild(), insideFunction);
+         elseblock(*tree.createChild(), state);
       else
          error();
    }
 }
 
-void Parser::elseblock (SyntaxTree& tree, bool insideFunction) {
+void Parser::elseblock (SyntaxTree& tree, int state) {
    expect(Lexer::T_ELSE);
    if (mTokenType == Lexer::T_IF)
-      ifblock(tree, insideFunction); //else if
+      ifblock(tree, state); //else if
    else {
 
       if (!accept(Lexer::T_NEWLINE))
          expect(Lexer::T_COLON);
 
-      block(tree, insideFunction); // else
+      block(tree, state); // else
       expect(Lexer::T_END);
    }
 }
 
-void Parser::whileblock (SyntaxTree& tree, bool insideFunction) {
+void Parser::whileblock (SyntaxTree& tree, int state) {
    expect(Lexer::T_WHILE);
    tree.type = SyntaxTree::TYPE_WHILE;
    expression(*tree.createChild());
@@ -173,12 +188,12 @@ void Parser::whileblock (SyntaxTree& tree, bool insideFunction) {
    if (!accept(Lexer::T_NEWLINE))
       expect(Lexer::T_COLON);
 
-   block(*tree.createChild(), insideFunction);
+   block(*tree.createChild(), state | STATE_INSIDE_LOOP);
 
    expect(Lexer::T_END);
 }
 
-void Parser::forblock (SyntaxTree& tree, bool insideFunction) {
+void Parser::forblock (SyntaxTree& tree, int state) {
    expect(Lexer::T_FOR);
    tree.type = SyntaxTree::TYPE_FOR;
 
@@ -195,7 +210,7 @@ void Parser::forblock (SyntaxTree& tree, bool insideFunction) {
    if (!accept(Lexer::T_NEWLINE))
       expect(Lexer::T_COLON);
 
-   block(*tree.createChild(), insideFunction);
+   block(*tree.createChild(), state | STATE_INSIDE_LOOP);
 
    expect(Lexer::T_END);
 }

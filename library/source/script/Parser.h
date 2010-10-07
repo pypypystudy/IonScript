@@ -33,14 +33,19 @@ namespace ion {
          bool accept (Lexer::TokenType token);
          void endOfStatement ();
 
+         enum ParserState {
+            STATE_INSIDE_FUNCTION = 1,
+            STATE_INSIDE_LOOP = 2,
+         };
+
          /* Non Terminals */
-         void block (SyntaxTree& tree, bool insideFunction);
-         void statement (SyntaxTree& tree, bool insideFunction);
-         void function (SyntaxTree& tree);
-         void ifblock (SyntaxTree& tree, bool insideFunction);
-         void elseblock (SyntaxTree& tree, bool insideFunction);
-         void whileblock (SyntaxTree& tree, bool insideFunction);
-         void forblock (SyntaxTree& tree, bool insideFunction);
+         void block (SyntaxTree& tree, int state);
+         void statement (SyntaxTree& tree, int state);
+         void functionDefinition (SyntaxTree& tree);
+         void ifblock (SyntaxTree& tree,  int state);
+         void elseblock (SyntaxTree& tree, int state);
+         void whileblock (SyntaxTree& tree, int state);
+         void forblock (SyntaxTree& tree, int state);
          void expression (SyntaxTree& tree);
          void andExpression (SyntaxTree& tree);
          void orExpression (SyntaxTree& tree);
