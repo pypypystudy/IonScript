@@ -42,27 +42,16 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
    switch (tree.type) {
       case SyntaxTree::TYPE_BLOCK:
       {
-         mnDeclaredValues.push(0);
+         mnValueStackSize.push(mNamesStack.size());
 
          for (list<SyntaxTree*>::const_iterator it = tree.getChildren().begin();
             it != tree.getChildren().end();
             ++it)
             compile(**it, output, target);
 
-         for (size_t i = 0; i < mnDeclaredValues.top(); ++i)
-            mNamesStack.pop_back();
+         deleteValues(output);
 
-         while (mnDeclaredValues.top() > 0) {
-            if (mnDeclaredValues.top() == 1) {
-               output << OP_POP;
-               break;
-            } else {
-               size_t count = min((int) mnDeclaredValues.top(), 256);
-               mnDeclaredValues.top() -= count;
-               output << OP_POP_N << (small_size_t) count;
-            }
-         }
-
+         mnValueStackSize.pop();
 
          return 0;
       }
@@ -175,7 +164,8 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
             output.set(continues[i], incrementIndex);
 
          mContinues.pop();
-         break;
+         
+         return target;
       }
 
       case SyntaxTree::TYPE_CONTINUE:
@@ -188,7 +178,6 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
       {
          location_t loc;
          if (!findLocalName(tree.str, loc)) {
-            ++mnDeclaredValues.top();
             mNamesStack.push_back(tree.str);
             output << OP_PUSH;
             loc = mNamesStack.size() - 1 - mActivationFramePointer.top();
@@ -330,7 +319,6 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
          if (findLocalName(s.str(), loc))
             return loc;
          else {
-            ++mnDeclaredValues.top();
             mNamesStack.push_back(s.str());
             output << OP_PUSH;
             output << OP_STORE_N << tree.number;
@@ -344,7 +332,6 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
          if (findLocalName(tree.str, loc))
             return loc;
          else {
-            ++mnDeclaredValues.top();
             mNamesStack.push_back(tree.str);
             output << OP_PUSH;
             output << OP_STORE_S << tree.str;
@@ -361,7 +348,6 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
             if (!mVariableDeclarationAllowed.top())
                error(tree.sourceLineNumber, "undefined variable \"" + tree.str + "\".");
 
-            ++mnDeclaredValues.top();
             mNamesStack.push_back(tree.str);
             output << OP_PUSH;
             return mNamesStack.size() - 1 - mActivationFramePointer.top();
@@ -477,8 +463,6 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
          if (findLocalName(s, loc))
             return loc;
          else {
-            // well, it hasn't been found. Let's add it to the stack.
-            ++mnDeclaredValues.top();
             mNamesStack.push_back(s);
             output << OP_PUSH;
             output << OP_STORE_B << tree.boolean;
@@ -583,6 +567,23 @@ bool Compiler::findLocalName (const std::string& name, location_t & outLocation)
    return false;
 }
 
+void Compiler::deleteValues (BytecodeWriter& output) {
+   size_t count = mNamesStack.size() - mnValueStackSize.top();
+
+   for (size_t i = 0; i < count; ++i)
+      mNamesStack.pop_back();
+
+   while (count > 0) {
+      if (count == 1) {
+         output << OP_POP;
+         break;
+      } else {
+         size_t nToRemove = min((int) count, 256);
+         count -= nToRemove;
+         output << OP_POP_N << (small_size_t) nToRemove;
+      }
+   }
+}
 
 void Compiler::checkComparisonConsistency (const SyntaxTree& tree) const {
    if (tree.left()->type == SyntaxTree::TYPE_NIL ||

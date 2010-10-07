@@ -49,7 +49,7 @@ namespace ion {
          /* STATE */
          std::stack<size_t> mActivationFramePointer;
          std::stack<small_size_t> mnRequiredRegisters;
-         std::stack<small_size_t> mnDeclaredValues;
+         std::stack<small_size_t> mnValueStackSize;
          std::stack<bool> mDeclareOnly;
          std::stack<bool> mVariableDeclarationAllowed;
          std::stack<std::vector<index_t>* > mContinues;
@@ -59,6 +59,7 @@ namespace ion {
          void compileExpressionNodeChildren (const SyntaxTree& node, BytecodeWriter& output, location_t target, OpCode op);
 
          bool findLocalName (const std::string& name, location_t& outLocation) const;
+         void deleteValues (BytecodeWriter& output);
 
          /* Auxiliary control functions*/
          void checkComparisonConsistency (const SyntaxTree& tree) const;
