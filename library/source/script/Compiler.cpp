@@ -24,6 +24,7 @@ void Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output) {
    mActivationFramePointer.push(0);
    mnRequiredRegisters.push(0);
    mDeclareOnly.push(false);
+   mVariableDeclarationAllowed.push(false);
 
    // Set a temporary op for registers preallocaiton
    output << OP_REG << mnRequiredRegisters.top();
@@ -101,8 +102,6 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
       {
          list<SyntaxTree*>::const_iterator it = tree.getChildren().begin();
 
-         checkVariablesDefinition(**it);
-
          mDeclareOnly.push(true);
          compile(**it, output, target);
          mDeclareOnly.pop();
@@ -147,9 +146,6 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
          const SyntaxTree& incrementTree = **it;
          ++it; // Block
          const SyntaxTree& blockTree = **it;
-
-         checkVariablesDefinition(conditionTree);
-         checkVariablesDefinition(incrementTree);
 
          mDeclareOnly.push(true);
          compile(conditionTree, output, target);
@@ -244,7 +240,6 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
       case SyntaxTree::TYPE_RETURN:
       {
          if (tree.hasChildren()) {
-            checkVariablesDefinition(*tree.left());
             location_t result = compile(*tree.left(), output, target);
             output << OP_RETURN << result;
             return result;
@@ -298,7 +293,6 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
 
          std::list<SyntaxTree*>::const_iterator it;
          for (it = tree.getChildren().begin(); it != tree.getChildren().end(); it++) {
-            checkVariablesDefinition(**it);
 
             location_t regLoc = target;
             if (regLoc >= 0)
@@ -364,6 +358,9 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
          if (findLocalName(tree.str, loc))
             return loc;
          else {
+            if (!mVariableDeclarationAllowed.top())
+               error(tree.sourceLineNumber, "undefined variable \"" + tree.str + "\".");
+
             ++mnDeclaredValues.top();
             mNamesStack.push_back(tree.str);
             output << OP_PUSH;
@@ -434,18 +431,17 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
 
          location_t listLoc = 0, indexLoc = 0, result = 0;
 
-         checkVariablesDefinition(*tree.right());
-
          if (tree.left()->type == SyntaxTree::TYPE_CONTAINER_ELEMENT) {
-            checkVariablesDefinition(*tree.left());
-
             location_t reg = (target < 0) ? target : -1;
             listLoc = compile(*tree.left()->left(), output, reg);
             if (listLoc == reg) reg--;
             indexLoc = compile(*tree.left()->right(), output, reg);
 
-         } else
+         } else {
+            mVariableDeclarationAllowed.push(true);
             target = compile(*tree.left(), output, target);
+            mVariableDeclarationAllowed.pop();
+         }
 
          result = compile(*tree.right(), output, target);
 
@@ -587,19 +583,6 @@ bool Compiler::findLocalName (const std::string& name, location_t & outLocation)
    return false;
 }
 
-void Compiler::checkVariablesDefinition (const SyntaxTree & tree) const {
-   if (tree.type == SyntaxTree::TYPE_ASSIGNEMENT) {
-      checkVariablesDefinition(*tree.right());
-   } else if (tree.type == SyntaxTree::TYPE_VARIABLE) {
-      location_t loc;
-      if (!findLocalName(tree.str, loc))
-         error(tree.sourceLineNumber, "undefined variable \"" + tree.str + "\".");
-   } else {
-      std::list<SyntaxTree*>::const_iterator it;
-      for (it = tree.getChildren().begin(); it != tree.getChildren().end(); it++)
-         checkVariablesDefinition(**it);
-   }
-}
 
 void Compiler::checkComparisonConsistency (const SyntaxTree& tree) const {
    if (tree.left()->type == SyntaxTree::TYPE_NIL ||

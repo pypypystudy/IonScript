@@ -51,6 +51,7 @@ namespace ion {
          std::stack<small_size_t> mnRequiredRegisters;
          std::stack<small_size_t> mnDeclaredValues;
          std::stack<bool> mDeclareOnly;
+         std::stack<bool> mVariableDeclarationAllowed;
          std::stack<std::vector<index_t>* > mContinues;
          std::stack<std::vector<index_t>* > mBreaks;
 
@@ -60,7 +61,6 @@ namespace ion {
          bool findLocalName (const std::string& name, location_t& outLocation) const;
 
          /* Auxiliary control functions*/
-         void checkVariablesDefinition (const SyntaxTree& tree) const;
          void checkComparisonConsistency (const SyntaxTree& tree) const;
 
          void error (size_t line, const std::string& error) const;
