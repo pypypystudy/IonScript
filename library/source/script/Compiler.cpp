@@ -91,6 +91,8 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
       {
          list<SyntaxTree*>::const_iterator it = tree.getChildren().begin();
 
+         mnBlockValueStackSize.push(mNamesStack.size());
+
          mDeclareOnly.push(true);
          compile(**it, output, target);
          mDeclareOnly.pop();
@@ -111,7 +113,7 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
          mBreaks.push(&breaks);
 
          mnLoopValueStackSize.push(mNamesStack.size());
-         compile(**it, output, target);
+         compile(**it, output, target); // compile the block
          mnLoopValueStackSize.pop();
 
          output << OP_JUMP << beginning;
@@ -127,12 +129,17 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
          mContinues.pop();
          mBreaks.pop();
 
+         deleteValues(mnBlockValueStackSize.top(), output, true);
+         mnBlockValueStackSize.pop();
+
          break;
       }
 
       case SyntaxTree::TYPE_FOR:
       {
          list<SyntaxTree*>::const_iterator it = tree.getChildren().begin();
+
+         mnBlockValueStackSize.push(mNamesStack.size());
 
          // Assignement
          compile(**it, output, target);
@@ -183,6 +190,9 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
 
          mContinues.pop();
          mBreaks.pop();
+
+         deleteValues(mnBlockValueStackSize.top(), output, true);
+         mnBlockValueStackSize.pop();
 
          return target;
       }
