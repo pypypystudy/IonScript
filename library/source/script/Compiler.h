@@ -42,12 +42,20 @@ namespace ion {
       private:
 
          std::vector<std::string> mNamesStack;
-         std::stack<size_t> mActivationFramePointer;
+
          std::map<std::string, location_t> mScriptFunctionsLocations;
          const HostFunctionsMap& mHostFunctionsMap;
 
-         int compile (const SyntaxTree& tree, BytecodeWriter& output, location_t target, unsigned char& registerCount, size_t& nDeclaredValues, bool declareOnly);
-         void compileExpressionNodeChildren (const SyntaxTree& node, BytecodeWriter& output, location_t target, OpCode op, unsigned char& registerCount, size_t& nDeclaredValues, bool declareOnly);
+         /* STATE */
+         std::stack<size_t> mActivationFramePointer;
+         std::stack<small_size_t> mnRequiredRegisters;
+         std::stack<small_size_t> mnDeclaredValues;
+         std::stack<bool> mDeclareOnly;
+         std::stack<std::vector<index_t>* > mContinues;
+         std::stack<std::vector<index_t>* > mBreaks;
+
+         int compile (const SyntaxTree& tree, BytecodeWriter& output, location_t target);
+         void compileExpressionNodeChildren (const SyntaxTree& node, BytecodeWriter& output, location_t target, OpCode op);
 
          bool findLocalName (const std::string& name, location_t& outLocation) const;
 

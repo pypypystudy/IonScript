@@ -22,45 +22,42 @@ void Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output) {
    mScriptFunctionsLocations.clear();
 
    mActivationFramePointer.push(0);
-
-   small_size_t registersCount = 0;
+   mnRequiredRegisters.push(0);
+   mDeclareOnly.push(false);
 
    // Set a temporary op for registers preallocaiton
-   output << OP_REG << registersCount;
+   output << OP_REG << mnRequiredRegisters.top();
 
    // We're ready to go!
-   size_t nDeclaredValues;
-   compile(tree, output, -1, registersCount, nDeclaredValues, false);
+   compile(tree, output, -1);
 
-   output.set(1, registersCount);
-
-   mActivationFramePointer.pop();
+   output.set(1, mnRequiredRegisters.top());
 }
 
 //
 
-int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_t target, small_size_t& nRegisters, size_t& nDeclaredValues, bool declareOnly) {
+int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_t target) {
 
    switch (tree.type) {
       case SyntaxTree::TYPE_BLOCK:
       {
-         size_t thisBlockDeclaredValuesCount = 0;
+         mnDeclaredValues.push(0);
 
          for (list<SyntaxTree*>::const_iterator it = tree.getChildren().begin();
             it != tree.getChildren().end();
             ++it)
-            compile(**it, output, target, nRegisters, thisBlockDeclaredValuesCount, declareOnly);
+            compile(**it, output, target);
 
-         for (size_t i = 0; i < thisBlockDeclaredValuesCount; ++i)
+         for (size_t i = 0; i < mnDeclaredValues.top(); ++i)
             mNamesStack.pop_back();
 
-         while (thisBlockDeclaredValuesCount > 0) {
-            if (thisBlockDeclaredValuesCount == 1) {
+         while (mnDeclaredValues.top() > 0) {
+            if (mnDeclaredValues.top() == 1) {
                output << OP_POP;
                break;
             } else {
-               size_t count = min(thisBlockDeclaredValuesCount, (size_t) 256);
-               thisBlockDeclaredValuesCount -= count;
+               size_t count = min((int) mnDeclaredValues.top(), 256);
+               mnDeclaredValues.top() -= count;
                output << OP_POP_N << (small_size_t) count;
             }
          }
@@ -74,14 +71,14 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
          list<SyntaxTree*>::const_iterator it = tree.getChildren().begin();
          const SyntaxTree* pConditionTree = *it;
 
-         target = compile(*pConditionTree, output, target, nRegisters, nDeclaredValues, declareOnly);
+         target = compile(*pConditionTree, output, target);
          output << OP_JUMP_COND << target;
          size_t jumpIndex = output.getSize();
          output << (index_t) 0;
 
          ++it;
          const SyntaxTree* pIfBlock = *it;
-         compile(*pIfBlock, output, target, nRegisters, nDeclaredValues, declareOnly);
+         compile(*pIfBlock, output, target);
 
          ++it;
          if (it != tree.getChildren().end()) {//there's an if block
@@ -91,7 +88,7 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
 
             output.set(jumpIndex, (index_t) output.getSize());
 
-            compile(**it, output, target, nRegisters, nDeclaredValues, declareOnly);
+            compile(**it, output, target);
 
             output.set(afterElseJumpIndex, (index_t) output.getSize());
 
@@ -104,22 +101,34 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
       {
          list<SyntaxTree*>::const_iterator it = tree.getChildren().begin();
 
-         compile(**it, output, target, nRegisters, nDeclaredValues, true);
+         checkVariablesDefinition(**it);
+
+         mDeclareOnly.push(true);
+         compile(**it, output, target);
+         mDeclareOnly.pop();
 
          index_t beginning = output.getSize();
 
-         location_t result = compile(**it, output, target, nRegisters, nDeclaredValues, declareOnly);
+         location_t result = compile(**it, output, target);
 
          output << OP_JUMP_COND << result;
          index_t jumpIndex = output.getSize();
          output << (index_t) 0;
 
          ++it; //block
-         compile(**it, output, target, nRegisters, nDeclaredValues, declareOnly);
+         vector<index_t> continues;
+         mContinues.push(&continues);
+
+         compile(**it, output, target);
 
          output << OP_JUMP << beginning;
 
          output.set(jumpIndex, (index_t) output.getSize());
+
+         for (size_t i = 0; i < continues.size(); i++)
+            output.set(continues[i], beginning);
+
+         mContinues.pop();
 
          break;
       }
@@ -129,7 +138,7 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
          list<SyntaxTree*>::const_iterator it = tree.getChildren().begin();
 
          // Assignement
-         compile(**it, output, target, nRegisters, nDeclaredValues, declareOnly);
+         compile(**it, output, target);
 
          // Condition
          ++it;
@@ -139,40 +148,56 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
          ++it; // Block
          const SyntaxTree& blockTree = **it;
 
-         compile(conditionTree, output, target, nRegisters, nDeclaredValues, true);
-         compile(incrementTree, output, target, nRegisters, nDeclaredValues, true);
+         checkVariablesDefinition(conditionTree);
+         checkVariablesDefinition(incrementTree);
+
+         mDeclareOnly.push(true);
+         compile(conditionTree, output, target);
+         compile(incrementTree, output, target);
+         mDeclareOnly.pop();
 
          index_t beginning = output.getSize();
 
-         location_t result = compile(conditionTree, output, target, nRegisters, nDeclaredValues, declareOnly);
+         location_t result = compile(conditionTree, output, target);
 
          output << OP_JUMP_COND << result;
          index_t jumpIndex = output.getSize();
          output << (index_t) 0;
 
+         vector<index_t> continues;
+         mContinues.push(&continues);
+         compile(blockTree, output, target);
 
-         compile(blockTree, output, target, nRegisters, nDeclaredValues, declareOnly);
-         compile(incrementTree, output, target, nRegisters, nDeclaredValues, declareOnly);
+         index_t incrementIndex = output.getSize();
+         compile(incrementTree, output, target);
 
          output << OP_JUMP << beginning;
 
          output.set(jumpIndex, (index_t) output.getSize());
 
+         for (size_t i = 0; i < continues.size(); i++)
+            output.set(continues[i], incrementIndex);
+
+         mContinues.pop();
          break;
       }
+
+      case SyntaxTree::TYPE_CONTINUE:
+         output << OP_JUMP;
+         mContinues.top()->push_back(output.getSize());
+         output << (index_t) 0;
+         return target;
 
       case SyntaxTree::TYPE_FUNCTION_DEF:
       {
          location_t loc;
          if (!findLocalName(tree.str, loc)) {
-            ++nDeclaredValues;
+            ++mnDeclaredValues.top();
             mNamesStack.push_back(tree.str);
             output << OP_PUSH;
             loc = mNamesStack.size() - 1 - mActivationFramePointer.top();
          }
          mScriptFunctionsLocations[tree.str] = loc;
-
-         small_size_t innerRegisterCount = 0;
 
          output << OP_STORE_AT_F << loc;
          size_t storeIndex = output.getSize();
@@ -181,7 +206,7 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
          output << (small_size_t) (tree.getChildren().size() - 1);
 
          size_t regIndex = output.getSize();
-         output << innerRegisterCount;
+         output << (small_size_t) 0;
 
          output << OP_JUMP;
          size_t jumpPos = output.getSize();
@@ -190,13 +215,15 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
          output.set(storeIndex, (index_t) output.getSize());
 
          mActivationFramePointer.push(mNamesStack.size());
+         mnRequiredRegisters.push(0);
+
          std::list<SyntaxTree*>::const_iterator it;
          for (it = tree.getChildren().begin(); it != tree.getChildren().end(); it++) {
             if ((*it)->type == SyntaxTree::TYPE_ARGUMENT)
                mNamesStack.push_back((*it)->str);
             else {// BLOCK
-               compile(**it, output, target, innerRegisterCount, nDeclaredValues, declareOnly);
-               output.set(regIndex, innerRegisterCount);
+               compile(**it, output, target);
+               output.set(regIndex, mnRequiredRegisters.top());
             }
          }
 
@@ -208,6 +235,7 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
          while (mNamesStack.size() > mActivationFramePointer.top())
             mNamesStack.pop_back();
 
+         mnRequiredRegisters.pop();
          mActivationFramePointer.pop();
 
          return loc;
@@ -217,7 +245,7 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
       {
          if (tree.hasChildren()) {
             checkVariablesDefinition(*tree.left());
-            location_t result = compile(*tree.left(), output, target, nRegisters, nDeclaredValues, declareOnly);
+            location_t result = compile(*tree.left(), output, target);
             output << OP_RETURN << result;
             return result;
          } else {
@@ -276,10 +304,10 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
             if (regLoc >= 0)
                regLoc = -1;
 
-            location_t result = compile(**it, output, regLoc, nRegisters, nDeclaredValues, declareOnly);
+            location_t result = compile(**it, output, regLoc);
 
             if (result < 0)
-               nRegisters = max((int) nRegisters, (int) -regLoc);
+               mnRequiredRegisters.top() = max((int) mnRequiredRegisters.top(), (int) -regLoc);
 
             output << OP_PUSH_ARG << result;
          }
@@ -289,7 +317,7 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
          else
             output << callOp << loc << (small_size_t) tree.getChildren().size();
 
-         nRegisters = max((int) -target, (int) nRegisters);
+         mnRequiredRegisters.top() = max((int) -target, (int) mnRequiredRegisters.top());
 
          output << OP_POP_TO << target;
 
@@ -308,7 +336,7 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
          if (findLocalName(s.str(), loc))
             return loc;
          else {
-            ++nDeclaredValues;
+            ++mnDeclaredValues.top();
             mNamesStack.push_back(s.str());
             output << OP_PUSH;
             output << OP_STORE_N << tree.number;
@@ -322,7 +350,7 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
          if (findLocalName(tree.str, loc))
             return loc;
          else {
-            ++nDeclaredValues;
+            ++mnDeclaredValues.top();
             mNamesStack.push_back(tree.str);
             output << OP_PUSH;
             output << OP_STORE_S << tree.str;
@@ -336,8 +364,7 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
          if (findLocalName(tree.str, loc))
             return loc;
          else {
-            // well, it hasn't been found. Let's add it to the stack.
-            ++nDeclaredValues;
+            ++mnDeclaredValues.top();
             mNamesStack.push_back(tree.str);
             output << OP_PUSH;
             return mNamesStack.size() - 1 - mActivationFramePointer.top();
@@ -350,11 +377,11 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
          std::list<SyntaxTree*>::const_iterator it;
          location_t reg = (target < 0) ? target - 1 : -1;
          for (it = tree.getChildren().begin(); it != tree.getChildren().end(); it++) {
-            location_t result = compile(**it, output, reg, nRegisters, nDeclaredValues, declareOnly);
+            location_t result = compile(**it, output, reg);
             output << OP_LIST_ADD << target << result;
 
             if (result < 0)
-               max((int) -result, (int) nRegisters);
+               max((int) -result, (int) mnRequiredRegisters.top());
          }
 
          return target;
@@ -369,18 +396,18 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
 
             location_t reg = (target < 0) ? target - 1 : -1;
 
-            location_t index = compile(*(*it)->left(), output, reg, nRegisters, nDeclaredValues, declareOnly);
+            location_t index = compile(*(*it)->left(), output, reg);
 
             if (reg < 0 && index == reg) {
-               nRegisters = max((int) -reg, (int) nRegisters);
+               mnRequiredRegisters.top() = max((int) -reg, (int) mnRequiredRegisters.top());
                --reg;
             }
-            location_t value = compile(*(*it)->right(), output, reg, nRegisters, nDeclaredValues, declareOnly);
+            location_t value = compile(*(*it)->right(), output, reg);
 
             if (reg < 0 && value == reg)
-               nRegisters = max((int) -reg, (int) nRegisters);
+               mnRequiredRegisters.top() = max((int) -reg, (int) mnRequiredRegisters.top());
 
-            nRegisters = max((int) nRegisters, (int) -reg);
+            mnRequiredRegisters.top() = max((int) mnRequiredRegisters.top(), (int) -reg);
 
             output << OP_DICTIONARY_ADD << target << index << value;
          }
@@ -391,10 +418,10 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
       case SyntaxTree::TYPE_CONTAINER_ELEMENT:
       {
          location_t reg = (target < 0) ? target : -1;
-         location_t listLoc = compile(*tree.left(), output, reg, nRegisters, nDeclaredValues, declareOnly);
+         location_t listLoc = compile(*tree.left(), output, reg);
          if (listLoc == reg)
             reg--;
-         location_t indexLoc = compile(*tree.right(), output, reg, nRegisters, nDeclaredValues, declareOnly);
+         location_t indexLoc = compile(*tree.right(), output, reg);
 
          output << OP_GET << target << listLoc << indexLoc;
          return target;
@@ -413,16 +440,16 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
             checkVariablesDefinition(*tree.left());
 
             location_t reg = (target < 0) ? target : -1;
-            listLoc = compile(*tree.left()->left(), output, reg, nRegisters, nDeclaredValues, declareOnly);
+            listLoc = compile(*tree.left()->left(), output, reg);
             if (listLoc == reg) reg--;
-            indexLoc = compile(*tree.left()->right(), output, reg, nRegisters, nDeclaredValues, declareOnly);
+            indexLoc = compile(*tree.left()->right(), output, reg);
 
          } else
-            target = compile(*tree.left(), output, target, nRegisters, nDeclaredValues, declareOnly);
+            target = compile(*tree.left(), output, target);
 
-         result = compile(*tree.right(), output, target, nRegisters, nDeclaredValues, declareOnly);
+         result = compile(*tree.right(), output, target);
 
-         if (!declareOnly) {
+         if (!mDeclareOnly.top()) {
             if (tree.left()->type == SyntaxTree::TYPE_CONTAINER_ELEMENT)
                output << OP_SET << result << listLoc << indexLoc;
             if (result != target)
@@ -432,19 +459,19 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
       }
 
       case SyntaxTree::TYPE_SUM:
-         compileExpressionNodeChildren(tree, output, target, OP_ADD, nRegisters, nDeclaredValues, declareOnly);
+         compileExpressionNodeChildren(tree, output, target, OP_ADD);
          return target;
 
       case SyntaxTree::TYPE_DIFFERENCE:
-         compileExpressionNodeChildren(tree, output, target, OP_SUB, nRegisters, nDeclaredValues, declareOnly);
+         compileExpressionNodeChildren(tree, output, target, OP_SUB);
          return target;
 
       case SyntaxTree::TYPE_PRODUCT:
-         compileExpressionNodeChildren(tree, output, target, OP_MUL, nRegisters, nDeclaredValues, declareOnly);
+         compileExpressionNodeChildren(tree, output, target, OP_MUL);
          return target;
 
       case SyntaxTree::TYPE_DIVISION:
-         compileExpressionNodeChildren(tree, output, target, OP_DIV, nRegisters, nDeclaredValues, declareOnly);
+         compileExpressionNodeChildren(tree, output, target, OP_DIV);
          return target;
 
       case SyntaxTree::TYPE_BOOLEAN:
@@ -455,7 +482,7 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
             return loc;
          else {
             // well, it hasn't been found. Let's add it to the stack.
-            ++nDeclaredValues;
+            ++mnDeclaredValues.top();
             mNamesStack.push_back(s);
             output << OP_PUSH;
             output << OP_STORE_B << tree.boolean;
@@ -469,84 +496,84 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
          location_t reg, left;
 
          reg = (target < 0) ? target : -1;
-         left = compile(*tree.left(), output, reg, nRegisters, nDeclaredValues, declareOnly);
+         left = compile(*tree.left(), output, reg);
 
          if (reg < 0 && left == reg)
-            nRegisters = max((int) -reg, (int) nRegisters);
+            mnRequiredRegisters.top() = max((int) -reg, (int) mnRequiredRegisters.top());
 
          output << OP_NOT << target << left;
          return target;
       }
 
       case SyntaxTree::TYPE_AND:
-         compileExpressionNodeChildren(tree, output, target, OP_AND, nRegisters, nDeclaredValues, declareOnly);
+         compileExpressionNodeChildren(tree, output, target, OP_AND);
          return target;
 
       case SyntaxTree::TYPE_OR:
-         compileExpressionNodeChildren(tree, output, target, OP_OR, nRegisters, nDeclaredValues, declareOnly);
+         compileExpressionNodeChildren(tree, output, target, OP_OR);
          return target;
 
       case SyntaxTree::TYPE_EQUALS:
          checkComparisonConsistency(tree);
-         compileExpressionNodeChildren(tree, output, target, OP_EQ, nRegisters, nDeclaredValues, declareOnly);
+         compileExpressionNodeChildren(tree, output, target, OP_EQ);
          return target;
 
       case SyntaxTree::TYPE_NOT_EQUALS:
          checkComparisonConsistency(tree);
-         compileExpressionNodeChildren(tree, output, target, OP_NEQ, nRegisters, nDeclaredValues, declareOnly);
+         compileExpressionNodeChildren(tree, output, target, OP_NEQ);
          return target;
 
       case SyntaxTree::TYPE_GREATER:
          checkComparisonConsistency(tree);
-         compileExpressionNodeChildren(tree, output, target, OP_GR, nRegisters, nDeclaredValues, declareOnly);
+         compileExpressionNodeChildren(tree, output, target, OP_GR);
          return target;
 
       case SyntaxTree::TYPE_GREATER_EQUALS:
          checkComparisonConsistency(tree);
-         compileExpressionNodeChildren(tree, output, target, OP_GRE, nRegisters, nDeclaredValues, declareOnly);
+         compileExpressionNodeChildren(tree, output, target, OP_GRE);
          return target;
 
       case SyntaxTree::TYPE_LESSER:
          checkComparisonConsistency(tree);
-         compileExpressionNodeChildren(tree, output, target, OP_LS, nRegisters, nDeclaredValues, declareOnly);
+         compileExpressionNodeChildren(tree, output, target, OP_LS);
          return target;
 
       case SyntaxTree::TYPE_LESSER_EQUALS:
          checkComparisonConsistency(tree);
-         compileExpressionNodeChildren(tree, output, target, OP_LSE, nRegisters, nDeclaredValues, declareOnly);
+         compileExpressionNodeChildren(tree, output, target, OP_LSE);
          return target;
 
 
       default:
          error(tree.sourceLineNumber, "unsupported feature.");
    }
-   return 0;
+   return target;
 }
 
 void Compiler::error (size_t line, const std::string & error) const {
    throw SemanticError(line, error);
 }
 
-void Compiler::compileExpressionNodeChildren (const SyntaxTree& node, BytecodeWriter& output, location_t target, OpCode op, small_size_t& nRegisters, size_t& nDeclaredValues, bool declareOnly) {
+void Compiler::compileExpressionNodeChildren (const SyntaxTree& node, BytecodeWriter& output, location_t target, OpCode op) {
    location_t reg, left, right;
 
    reg = (target < 0) ? target : -1;
-   left = compile(*node.left(), output, reg, nRegisters, nDeclaredValues, declareOnly);
+   left = compile(*node.left(), output, reg);
 
    if (reg < 0 && left == reg) {
-      nRegisters = max((int) -reg, (int) nRegisters);
+      mnRequiredRegisters.top() = max((int) -reg, (int) mnRequiredRegisters.top());
       --reg;
    }
 
-   right = compile(*node.right(), output, reg, nRegisters, nDeclaredValues, declareOnly);
+   right = compile(*node.right(), output, reg);
 
    if (reg < 0 && right == reg)
-      nRegisters = max((int) -reg, (int) nRegisters);
+      mnRequiredRegisters.top() = max((int) -reg, (int) mnRequiredRegisters.top());
 
    if (target < 0)
-      nRegisters = max((int) -target, (int) nRegisters);
+      mnRequiredRegisters.top() = max((int) -target, (int) mnRequiredRegisters.top());
 
-   if (!declareOnly)
+   if (!mDeclareOnly.top())
       output << op << target << left << right;
 }
 
