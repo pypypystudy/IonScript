@@ -87,7 +87,7 @@ $(OBJS_D): ./$(BUILD_DIR)/debug/%.o : ./$(SOURCE_DIR)/%.cpp
 ##########EXTRA###########
 clean:
 	@echo ">> Cleaning..."
-	-rm -rf $(TARGET) $(TARGET_D) $(BUILD_DIR)
+	-rm -rf $(TARGET) $(TARGET_D) $(BUILD_DIR) $(BIN_DIR)
 	@echo ">> Done :)"
 
 polish:

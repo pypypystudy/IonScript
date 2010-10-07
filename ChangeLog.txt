@@ -1,0 +1,17 @@
+* Change log
+
+	* 0.13
+		* assertArgumentsCount() removed. Now you can define the number of accepted arguments when registering an new function so every function call is checked at compile time.
+		* "continue" and "break" statements usable within loops.
+		* compilation errors correctly provide the line number where the error is found.
+		* if you create a new variable within a for or while condition/assignment expression, these variables are local to the loops now and are deleted after the loop is executed.
+		* major internal improvements, restructuring and polishing.
+		
+	* 0.12
+		* Better script test utility. It runs all scripts contained in the scripts folder.
+		* Lexer def keyword bug fix.
+		* Some polishment
+		* assert() and dump() functions. assert() takes one or two arguments. The former one is the expression that will be tested and must be true. The latter one is a string that will be printed if assertion fails. dump() prints the current VM state debug information.
+		
+	* 0.11
+		* Documentation added. Some polishing.
