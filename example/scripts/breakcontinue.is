@@ -1,7 +1,21 @@
+print ("FOR LOOP")
 for i = 0; i < 4; i+=1
 	if i == 2: continue end
 	for j = 0; j < 5; j += 1
 		if j == 3: break end
 		print(i, j)
 	end
+end
+
+print ("WHILE LOOP")
+i = 4
+while true
+	if i == 4
+		i -= 1
+		continue
+	else if i == 1
+		break
+	end
+	print (i)
+	i -= 1
 end

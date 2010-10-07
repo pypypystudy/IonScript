@@ -105,9 +105,14 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
 
          ++it; //block
          vector<index_t> continues;
-         mContinues.push(&continues);
+         vector<index_t> breaks;
 
+         mContinues.push(&continues);
+         mBreaks.push(&breaks);
+
+         mnLoopValueStackSize.push(mNamesStack.size());
          compile(**it, output, target);
+         mnLoopValueStackSize.pop();
 
          output << OP_JUMP << beginning;
 
@@ -116,7 +121,11 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
          for (size_t i = 0; i < continues.size(); i++)
             output.set(continues[i], beginning);
 
+         for (size_t i = 0; i < breaks.size(); i++)
+            output.set(breaks[i], output.getSize());
+
          mContinues.pop();
+         mBreaks.pop();
 
          break;
       }
