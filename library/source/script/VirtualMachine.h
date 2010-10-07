@@ -8,10 +8,10 @@
 #define ION_VIRTUAL_MACHINE_H
 
 #include "Typedefs.h"
-#include "Compiler.h"
 #include "Value.h"
 #include "FunctionCallManager.h"
 
+#include <iostream>
 #include <istream>
 #include <stack>
 #include <map>
@@ -24,7 +24,7 @@ namespace ion {
        * executed in later stage. Other main functionalities are the possibility to register new host functions which can be called from the script
        * and post/get global values.
        */
-      class VirtualMachine : private Compiler {
+      class VirtualMachine {
          friend class FunctionCallManager;
 
       public:
@@ -113,7 +113,7 @@ namespace ion {
 
       private:
          /** List of registered host function groups. */
-         std::vector<HostFunction> mHostFunctionsListing;
+         std::vector<HostFunction> mHostFunctionGroups;
          /** Map of registered host-script functions. */
          HostFunctionsMap mHostFunctionsMap;
          /** Map of global variables. */

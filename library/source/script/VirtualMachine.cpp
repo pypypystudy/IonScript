@@ -10,6 +10,7 @@
 #include "SyntaxTree.h"
 #include "OpCode.h"
 #include "Bytecode.h"
+#include "Compiler.h"
 
 #include <vector>
 #include <map>
@@ -28,7 +29,7 @@ enum {
    BFID_DUMP
 };
 
-VirtualMachine::VirtualMachine () : Compiler (mHostFunctionsMap), mpProgram (0) {
+VirtualMachine::VirtualMachine () : mpProgram (0) {
    HostFunctionGroupID hfgID = registerHostFunctionGroup(builtinsGroup);
    setFunction("print", hfgID, BFID_PRINT, 0, -1);
    setFunction("post", hfgID, BFID_POST, 1);
@@ -46,8 +47,8 @@ VirtualMachine::~VirtualMachine () {
 }
 
 HostFunctionGroupID VirtualMachine::registerHostFunctionGroup (HostFunction function) {
-   mHostFunctionsListing.push_back(function);
-   return mHostFunctionsListing.size() - 1;
+   mHostFunctionGroups.push_back(function);
+   return mHostFunctionGroups.size() - 1;
 }
 
 void VirtualMachine::setFunction (const std::string& name, HostFunctionGroupID hostFunctionID, FunctionID functionID, int minArgumentsCount, int maxArgumentsCount) {
@@ -92,7 +93,8 @@ void VirtualMachine::compile (std::istream& source, std::vector<char>& output, S
    Parser parser(source);
    parser.parse(tree);
    BytecodeWriter writer(output);
-   Compiler::compile(tree, writer);
+   Compiler compiler(mHostFunctionsMap);
+   compiler.compile(tree, writer);
 }
 
 void VirtualMachine::run (std::vector<char>& program) {
@@ -212,7 +214,7 @@ void VirtualMachine::executeInstruction () {
 
          mRunning = false;
 
-         mHostFunctionsListing[hfgID](manager);
+         mHostFunctionGroups[hfgID](manager);
          break;
       }
 
