@@ -272,7 +272,11 @@ Lexer::TokenType Lexer::nextToken () {
                   mText += '!';
                   state = 102;
                   break;
-                  
+
+               case '^':
+                  state = 126;
+                  break;
+
                default:
                   throw LexicalErrorException(mLine, c);
             }
@@ -1243,6 +1247,18 @@ Lexer::TokenType Lexer::nextToken () {
             } else {
                mSource.unget();
                return T_CONTINUE;
+            }
+            break;
+
+            /*********************************************************************************************************/
+            /* symbols
+             */
+         case 126: // Symbol reading
+            if (isIdentifier(c))
+               mText += c;
+            else {
+               mSource.unget();
+               return T_STRING;
             }
             break;
       }

@@ -7,5 +7,11 @@ print (dic[1] + " " + dic[2])
 
 dic[1] = "HELLO"
 
-
 print (dic[(a = 1)] + " " + dic[2])
+
+person =  {
+		^name: "Isaac",
+		^surname: "Newton"
+	}
+	
+print (person[^name])
