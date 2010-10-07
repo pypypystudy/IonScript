@@ -79,7 +79,6 @@ void Parser::endOfStatement () {
       if (!accept(Lexer::T_SEMICOLON))
          expect(Lexer::T_EOS);
 }
-
 //
 
 void Parser::block (SyntaxTree& tree, int state) {
@@ -533,6 +532,7 @@ void Parser::factor (SyntaxTree& tree) {
       {
          tree.type = SyntaxTree::TYPE_DICTIONARY;
          nextToken();
+         stripNewLines();
          if (accept(Lexer::T_RIGHT_CURLY_BRACKET))
             return;
          SyntaxTree* pTree = tree.createChild();
@@ -542,11 +542,13 @@ void Parser::factor (SyntaxTree& tree) {
          expression(*pTree->createChild());
          while (mTokenType != Lexer::T_RIGHT_CURLY_BRACKET) {
             expect(Lexer::T_COMMA);
+            stripNewLines();
             SyntaxTree* pTree = tree.createChild();
             pTree->type = SyntaxTree::TYPE_PAIR;
             expression(*pTree->createChild());
             expect(Lexer::T_COLON);
             expression(*pTree->createChild());
+            stripNewLines();
          }
          nextToken();
          return;

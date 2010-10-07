@@ -57,6 +57,10 @@ namespace ion {
          void expect (Lexer::TokenType token);
          bool accept (Lexer::TokenType token);
          void endOfStatement ();
+         inline void stripNewLines () {
+            while (accept(Lexer::T_NEWLINE))
+               ;
+         }
 
          enum ParserState {
             STATE_INSIDE_FUNCTION = 1,
@@ -67,7 +71,7 @@ namespace ion {
          void block (SyntaxTree& tree, int state);
          void statement (SyntaxTree& tree, int state);
          void functionDefinition (SyntaxTree& tree);
-         void ifblock (SyntaxTree& tree,  int state);
+         void ifblock (SyntaxTree& tree, int state);
          void elseblock (SyntaxTree& tree, int state);
          void whileblock (SyntaxTree& tree, int state);
          void forblock (SyntaxTree& tree, int state);

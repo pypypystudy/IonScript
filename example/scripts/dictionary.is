@@ -1,4 +1,7 @@
-dic = {1: "hello", 2:"world"}
+dic = {	
+	1: "hello",
+	2: "world"
+	}
 
 print (dic[1] + " " + dic[2])
 
