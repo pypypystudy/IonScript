@@ -42,16 +42,16 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
    switch (tree.type) {
       case SyntaxTree::TYPE_BLOCK:
       {
-         mnValueStackSize.push(mNamesStack.size());
+         mnBlockValueStackSize.push(mNamesStack.size());
 
          for (list<SyntaxTree*>::const_iterator it = tree.getChildren().begin();
             it != tree.getChildren().end();
             ++it)
             compile(**it, output, target);
 
-         deleteValues(output);
+         deleteValues(mnBlockValueStackSize.top(), output, true);
 
-         mnValueStackSize.pop();
+         mnBlockValueStackSize.pop();
 
          return 0;
       }
@@ -150,8 +150,14 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
          output << (index_t) 0;
 
          vector<index_t> continues;
+         vector<index_t> breaks;
+
          mContinues.push(&continues);
+         mBreaks.push(&breaks);
+
+         mnLoopValueStackSize.push(mNamesStack.size());
          compile(blockTree, output, target);
+         mnLoopValueStackSize.pop();
 
          index_t incrementIndex = output.getSize();
          compile(incrementTree, output, target);
@@ -163,14 +169,26 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
          for (size_t i = 0; i < continues.size(); i++)
             output.set(continues[i], incrementIndex);
 
+         for (size_t i = 0; i < breaks.size(); i++)
+            output.set(breaks[i], output.getSize());
+
          mContinues.pop();
-         
+         mBreaks.pop();
+
          return target;
       }
 
       case SyntaxTree::TYPE_CONTINUE:
+         deleteValues(mnLoopValueStackSize.top(), output, false);
          output << OP_JUMP;
          mContinues.top()->push_back(output.getSize());
+         output << (index_t) 0;
+         return target;
+
+      case SyntaxTree::TYPE_BREAK:
+         deleteValues(mnLoopValueStackSize.top(), output, false);
+         output << OP_JUMP;
+         mBreaks.top()->push_back(output.getSize());
          output << (index_t) 0;
          return target;
 
@@ -567,11 +585,12 @@ bool Compiler::findLocalName (const std::string& name, location_t & outLocation)
    return false;
 }
 
-void Compiler::deleteValues (BytecodeWriter& output) {
-   size_t count = mNamesStack.size() - mnValueStackSize.top();
+void Compiler::deleteValues (size_t desiredStackSize, BytecodeWriter& output, bool deleteNames) {
+   size_t count = mNamesStack.size() - desiredStackSize;
 
-   for (size_t i = 0; i < count; ++i)
-      mNamesStack.pop_back();
+   if (deleteNames)
+      for (size_t i = 0; i < count; ++i)
+         mNamesStack.pop_back();
 
    while (count > 0) {
       if (count == 1) {

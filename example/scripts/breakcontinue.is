@@ -1,16 +1,7 @@
-
-for i = 0; i < 10; i+=1
-    if i == 5: continue end
-    print(i)
-end
-
-print(i)
-i=0
-while i < 10
-    if i==5:
-        i+=1
-        continue
-    end
-    print (i)
-    i+=1
+for i = 0; i < 4; i+=1
+	if i == 2: continue end
+	for j = 0; j < 5; j += 1
+		if j == 3: break end
+		print(i, j)
+	end
 end
