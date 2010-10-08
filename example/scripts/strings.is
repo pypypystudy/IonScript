@@ -1,0 +1,10 @@
+words = ["hello","dear","world"]
+
+// prints "hello dear world"
+print (" ".join(words))
+
+// this also prints the same
+print (" ".join("hello", "dear", "world"))
+
+// prints "3 is the perfect number!"
+print ((1+2).str() + " is the perfect number!")

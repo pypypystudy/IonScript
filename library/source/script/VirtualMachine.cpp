@@ -48,7 +48,9 @@ enum {
    BFID_APPEND,
    BFID_REMOVE,
    BFID_ASSERT,
-   BFID_DUMP
+   BFID_DUMP,
+   BFID_STR,
+   BFID_JOIN,
 };
 
 VirtualMachine::VirtualMachine () : mpProgram (0) {
@@ -61,6 +63,8 @@ VirtualMachine::VirtualMachine () : mpProgram (0) {
    setFunction("remove", hfgID, BFID_REMOVE, 2);
    setFunction("assert", hfgID, BFID_ASSERT, 1, 2);
    setFunction("dump", hfgID, BFID_DUMP); // no arguments
+   setFunction("str", hfgID, BFID_STR, 1);
+   setFunction("join", hfgID, BFID_JOIN, 2, -1);
 }
 
 VirtualMachine::~VirtualMachine () {
@@ -665,6 +669,33 @@ void VirtualMachine::builtinsGroup (const FunctionCallManager& manager) {
          manager.mVM.dump(std::cout);
          manager.returnNil();
          return;
+
+      case BFID_STR:
+         manager.returnString(manager.getArgument(0).toString());
+         return;
+
+      case BFID_JOIN:
+      {
+         manager.assertArgumentType(0, Value::TYPE_STRING);
+         string result = "";
+         const string& separator = manager.getArgument(0).getString();
+         if (manager.getArgument(1).isList()) {
+            List& list = manager.getArgument(1).getList();
+            for (size_t i = 0; i < list.size(); i++) {
+               result += list[i].toString();
+               if (i != list.size() - 1)
+                  result += separator;
+            }
+         } else {
+            for (size_t i = 1; i < manager.getArgumentsCount(); i++) {
+               result += manager.getArgument(i).toString();
+               if (i != manager.getArgumentsCount() - 1)
+                  result += separator;
+            }
+         }
+         manager.returnString(result);
+         return;
+      }
 
       default:
          manager.returnNil();
