@@ -1,4 +1,11 @@
 * Change log
+	* 0.14
+		* Arguments are not copied to a temporary buffer anymore. They are pushed onto the value-stack so no additional copy is required.
+		* store.x ops replaced by push.x ops.
+		* Built-in functions str() and join() added.
+		* Strings can be defined with the syntax "^symbol" where symbol is a string containing identifier-like only characters.
+		* You can define dictionaries in multiple lines now.
+		* Internal rewritings/polishment.
 
 	* 0.13
 		* assertArgumentsCount() removed. Now you can define the number of accepted arguments when registering an new function so every function call is checked at compile time.
