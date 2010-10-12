@@ -228,18 +228,15 @@ void VirtualMachine::executeInstruction () {
          small_size_t nArguments;
          *mpProgram >> hfgID >> fID >> nArguments;
 
-         vector<Value> arguments;
+         FunctionCallManager manager(*this, fID, &mArgsVector[mArgsVector.size() - nArguments], nArguments);
 
-         for (size_t i = mArgsVector.size() - nArguments; i < mArgsVector.size(); i++)
-            arguments.push_back(mArgsVector[i]);
-
-         for (size_t i = 0; i < nArguments; i++)
-            mArgsVector.pop_back();
-
-         FunctionCallManager manager(*this, fID, arguments);
-
+         // Pause the machine
          mRunning = false;
 
+         // Set the number of arguments
+         mHostFunctionArgumentsCount = nArguments;
+
+         // Call the host function group.
          mHostFunctionGroups[hfgID](manager);
          break;
       }
@@ -591,6 +588,12 @@ void VirtualMachine::executeInstruction () {
 
 void VirtualMachine::error (const std::string& message) const {
    throw RuntimeError(message);
+}
+
+void VirtualMachine::returnValue (const Value& value) {
+   mValuesStack.push_back(value);
+   mRunning = true;
+   mArgsVector.resize(mArgsVector.size() - mHostFunctionArgumentsCount);
 }
 
 void VirtualMachine::builtinsGroup (const FunctionCallManager& manager) {

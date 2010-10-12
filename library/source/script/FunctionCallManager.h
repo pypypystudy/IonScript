@@ -30,6 +30,7 @@
 #define	ION_SCRIPT_FUNCTIONCALLMANAGER_H
 
 #include "Typedefs.h"
+#include "Value.h"
 
 #include <vector>
 #include <typeinfo>
@@ -56,21 +57,16 @@ namespace ion {
           * @return the number of arguments passed to the function.
           */
          inline size_t getArgumentsCount () const {
-            return mArguments.size();
+            return mArgumentsCount;
          }
          /**
           * Gets a specific argument from the arguments list.
           * @param index index of the argument (0 is the first).
           * @return the argument.
+          * @remark the given index is not checked to be within the arguments range.
           */
          inline const Value& getArgument (size_t index) const {
-            return mArguments[index];
-         }
-         /**
-          * @return the whole vector of passed arguments.
-          */
-         inline const std::vector<Value>& getArguments () const {
-            return mArguments;
+            return mpArguments[index];
          }
          /**
           * Asserts that a specified argument at position index has an allowed type. It returns silently if the assertion succeeds.
@@ -118,11 +114,12 @@ namespace ion {
          /**
           * Only VirtualMachine creates new FunctionCallManager when the script calls a host function.
           */
-         FunctionCallManager (VirtualMachine &vm, FunctionID functionID, const std::vector<Value>& arguments);
+         FunctionCallManager (VirtualMachine &vm, FunctionID functionID, const Value* pArguments, size_t argumentsCount);
 
          VirtualMachine& mVM;
          FunctionID mFunctionID;
-         const std::vector<Value> mArguments;
+         const Value* mpArguments;
+         size_t mArgumentsCount;
       };
 
    }

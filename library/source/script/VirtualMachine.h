@@ -76,7 +76,7 @@ namespace ion {
           *    It's strongly suggested to have an enum for each host function group you may have that contains the IDs of the belonging functions.
           * @remark If maxArgumentsCount is lesser than minArgumentsCount and not equal to -1 it is set equal to minArgumentsCount.
           */
-         void setFunction (const std::string& functionName, HostFunctionGroupID hostFunctionGroupID, FunctionID functionID,int minArgumentsCount = 0, int maxArgumentsCount = -2);
+         void setFunction (const std::string& functionName, HostFunctionGroupID hostFunctionGroupID, FunctionID functionID, int minArgumentsCount = 0, int maxArgumentsCount = -2);
          /**
           * Sets a global variable by a new value.
           * @param name the global variable name.
@@ -154,6 +154,8 @@ namespace ion {
          std::vector<size_t> mIndicesStack;
          /** Is the VM running? */
          bool mRunning;
+         /** The number of arguments of the just called host function. NOTE: the VM always calls one HF at a time so there's no possibility for nested HF calls. */
+         size_t mHostFunctionArgumentsCount;
 
          /**
           * Executes a single instruction.
@@ -163,6 +165,13 @@ namespace ion {
           * Throws a runtime exception.
           */
          void error (const std::string& message) const;
+         /**
+          * This method is called by FunctionCallManager when the user wants to conclude the function call returning a certain value.
+          * The value is pushed onto the value stack, the VM is unpaused and the proper number of arguments is removed from the
+          * arguments stack.
+          * @param value the value to return.
+          */
+         void returnValue (const Value& value);
          /**
           * The function group containing built-in functions (print, len, append, ...)
           */
