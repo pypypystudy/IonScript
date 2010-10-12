@@ -426,8 +426,7 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
             return loc;
          else {
             mNamesStack.push_back(s);
-            output << OP_PUSH;
-            output << OP_STORE_B << tree.boolean;
+            output << OP_PUSH_B << tree.boolean;
             return mNamesStack.size() - 1 - mActivationFramePointer.top();
 
          }
@@ -442,8 +441,7 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
             return loc;
          else {
             mNamesStack.push_back(s.str());
-            output << OP_PUSH;
-            output << OP_STORE_N << tree.number;
+            output << OP_PUSH_N << tree.number;
             return mNamesStack.size() - 1 - mActivationFramePointer.top();
          }
       }
@@ -455,8 +453,7 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
             return loc;
          else {
             mNamesStack.push_back(tree.str);
-            output << OP_PUSH;
-            output << OP_STORE_S << tree.str;
+            output << OP_PUSH_S << tree.str;
             return mNamesStack.size() - 1 - mActivationFramePointer.top();
          }
       }
@@ -584,7 +581,6 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
       case SyntaxTree::TYPE_DIVISION:
          compileExpressionNodeChildren(tree, output, target, OP_DIV);
          return target;
-
 
       case SyntaxTree::TYPE_NOT:
       {

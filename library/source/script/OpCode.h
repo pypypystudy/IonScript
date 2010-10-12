@@ -64,6 +64,31 @@ namespace ion {
           */
          OP_PUSH_VAL,
 
+
+         /**
+          * pop.to <location_t: target>
+          * Copies the most recent Value on the value-stack to <target>, then it pops.
+          */
+         OP_POP_TO,
+
+         /**
+          * push.n <double: value>
+          * Pushes the number <value> on the Value stack
+          */
+         OP_PUSH_N,
+
+         /**
+          * push.s <string: value>
+          * Pushes the string <value> on the Value stack
+          */
+         OP_PUSH_S,
+
+         /**
+          * push.b <bool: value>
+          * Pushes the boolean <value> on the Value stack
+          */
+         OP_PUSH_B,
+         
          /**
           * pop
           * Removes the most recent Value from the value-stack.
@@ -75,36 +100,6 @@ namespace ion {
           * Pops <count> values from the value-stack.
           */
          OP_POP_N,
-
-         /**
-          * pop.to <location_t: target>
-          * Copies the most recent Value on the value-stack to <target>, then it pops.
-          */
-         OP_POP_TO,
-
-         /**
-          * store.i <int: value>
-          * Sets the most recent Value on the value-stack as the integer <value>.
-          */
-         OP_STORE_I,
-
-         /**
-          * store.n <double: value>
-          * Sets the most recent Value on the value-stack as the double <value>.
-          */
-         OP_STORE_N,
-
-         /**
-          * store.s <string: value>
-          * Sets the most recent Value on the value-stack as the string <value>.
-          */
-         OP_STORE_S,
-
-         /**
-          * store.b <bool: value>
-          * Sets the most recent Value on the value-stack as the boolean <value>.
-          */
-         OP_STORE_B,
 
          /**
           * store_at.nil <location_t: target>

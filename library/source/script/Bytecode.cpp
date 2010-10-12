@@ -181,35 +181,35 @@ void BytecodeReader::print (std::ostream& outStream) {
             break;
          }
 
-         case OP_STORE_I: // store.i  <integer>
-         {
-            int integer;
-            (*this) >> integer;
-            outStream << "store.i " << integer;
-            break;
-         }
+//         case OP_PUSH_I: // store.i  <integer>
+//         {
+//            int integer;
+//            (*this) >> integer;
+//            outStream << "store.i " << integer;
+//            break;
+//         }
 
-         case OP_STORE_N: // store.d  <double>
+         case OP_PUSH_N:
          {
             double decimal;
             (*this) >> decimal;
-            outStream << "store.d " << decimal;
+            outStream << "push.d " << decimal;
             break;
          }
 
-         case OP_STORE_S: // store.s  <string>
+         case OP_PUSH_S:
          {
             string str;
             (*this) >> str;
-            outStream << "store.s \"" << str << "\"";
+            outStream << "push.s \"" << str << "\"";
             break;
          }
 
-         case OP_STORE_B: // store.s <boolean>
+         case OP_PUSH_B:
          {
             bool b;
             (*this) >> b;
-            outStream << "store.b " << ((b) ? "true" : "false");
+            outStream << "push.b " << ((b) ? "true" : "false");
             break;
          }
 

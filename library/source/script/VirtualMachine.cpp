@@ -318,35 +318,27 @@ void VirtualMachine::executeInstruction () {
          return;
       }
 
-      case OP_STORE_I:
+      case OP_PUSH_N:
       {
-         int ival;
-         *mpProgram >> ival;
-         mValues.back() = ival;
+         double value;
+         *mpProgram >> value;
+         mValues.push_back(Value(value));
          return;
       }
 
-      case OP_STORE_N:
+      case OP_PUSH_S:
       {
-         double dval;
-         *mpProgram >> dval;
-         mValues.back() = dval;
+         string value;
+         *mpProgram >> value;
+         mValues.push_back(Value(value));
          return;
       }
 
-      case OP_STORE_S:
+      case OP_PUSH_B:
       {
-         string str;
-         *mpProgram >> str;
-         mValues.back() = str;
-         return;
-      }
-
-      case OP_STORE_B:
-      {
-         bool b;
-         *mpProgram >> b;
-         mValues.back() = b;
+         bool value;
+         *mpProgram >> value;
+         mValues.push_back(Value(value));
          break;
       }
 
