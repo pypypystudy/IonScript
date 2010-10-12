@@ -6,7 +6,7 @@ TARGET_NAME := example
 PLATFORM := WIN
 
 SOURCE_DIR := source
-BIN_DIR := bin
+BIN_DIR := .
 BUILD_DIR := build/$(PLATFORM)
 
 INCLUDES := -I$(SOURCE_DIR) -I../library/source
