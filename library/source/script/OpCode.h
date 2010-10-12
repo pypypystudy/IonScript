@@ -225,10 +225,16 @@ namespace ion {
           * Destroyes the funciton-call structure, restores the IP to the previous index and pushes value at <location> into the value-stack.
           */
          OP_RETURN,
-
+         /**
+          * pcall_sf.g <location:t target>
+          * Prepares the call of the global function at <target>. It simply pushes the necessary registers onto the value-stack.
+          */
          OP_PCALL_SF_G,
+         /**
+          * pcall_sf.l <location:t target>
+          * Prepares the call of the local function at <target>. It simply pushes the necessary registers onto the value-stack.
+          */
          OP_PCALL_SF_L,
-
          /**
           * call_sf.g <location_t: function>, <small_size_t: arguments_count>
           * Calls the function GLOBALLY located at <function> with <argument_count> arguments pushed previously.
