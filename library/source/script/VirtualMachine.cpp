@@ -170,7 +170,8 @@ void VirtualMachine::executeInstruction () {
       {
          small_size_t nRegisters;
          *mpProgram >> nRegisters;
-         mValues.resize(mValues.size() + nRegisters);
+         for (size_t i = 0; i < nRegisters; i++)
+            mValues.push_back(Value());
          mActivations.back().firstVariableLocation += nRegisters;
          return;
       }
@@ -187,7 +188,8 @@ void VirtualMachine::executeInstruction () {
          else
             functionValue = mValues[mActivations.back().firstVariableLocation + functionLoc]; //local
 
-         mValues.resize(mValues.size() + functionValue.mnFunctionRegisters);
+         for (size_t i = 0; i < functionValue.mnFunctionRegisters; i++)
+            mValues.push_back(Value());
          return;
       }
 
@@ -246,7 +248,8 @@ void VirtualMachine::executeInstruction () {
       case OP_RETURN_NIL:
       {
          // Restore the stack as it was before
-         mValues.resize(mActivations.back().stackSize);
+         while (mValues.size() > mActivations.back().stackSize)
+            mValues.pop_back();
 
          // Return a nil value
          mValues.push_back(Value());
@@ -267,7 +270,8 @@ void VirtualMachine::executeInstruction () {
          Value returnValue = getLocalValue(loc);
 
          // Restore the stack as it was before
-         mValues.resize(mActivations.back().stackSize);
+         while (mValues.size() > mActivations.back().stackSize)
+            mValues.pop_back();
 
          // Return a nil value
          mValues.push_back(returnValue);
@@ -292,7 +296,8 @@ void VirtualMachine::executeInstruction () {
       {
          small_size_t n;
          *mpProgram >> n;
-         mValues.resize(mValues.size() - n);
+         for (size_t i = 0; i < n; i++)
+            mValues.pop_back();
          return;
       }
 
@@ -592,7 +597,8 @@ void VirtualMachine::error (const std::string& message) const {
 }
 
 void VirtualMachine::returnValue (const Value& value) {
-   mValues.resize(mValues.size() - mHostFunctionArgumentsCount);
+   for (size_t i = 0; i < mHostFunctionArgumentsCount; i++)
+      mValues.pop_back();
    mValues.push_back(value);
    mRunning = true;
 }
