@@ -27,7 +27,7 @@
  ***************************************************************************/
 
 #include "Timer.h"
- 
+
 #include <script/VirtualMachine.h>
 #include <script/SyntaxTree.h>
 #include <script/Bytecode.h>
@@ -100,6 +100,7 @@ int main (int argc, char** argv) {
          compileDuration = timer.getDuration() * 1000;
          cout << "done! (size: " << bytecode.size() << " bytes)" << endl;
 
+
          cout << ">> Executing..." << endl;
          timer.reset();
          vm.run(bytecode);
@@ -114,6 +115,9 @@ int main (int argc, char** argv) {
    }
 
    cout << ">> Total time: " << (int) (total.getDuration()*1000) << " ms." << endl;
-   if (error)
+   if (error) {
       cout << "\tSome errors occurred." << endl;
+      return -1;
+   }
+
 }

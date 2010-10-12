@@ -135,9 +135,6 @@ void VirtualMachine::run (std::vector<char>& program) {
    mActivations.clear();
    mActivations.push_back(ActivationRecord());
 
-   mArguments.clear();
-   mArguments.reserve(10);
-
    mRunning = true;
 
    while (mpProgram->continues() && mRunning)
@@ -161,10 +158,6 @@ void VirtualMachine::dump (std::ostream& output) {
          "first-variable-loc: " << it->firstVariableLocation << "\n";
       i++;
    }
-
-   output << "Arguments-Vector:\n";
-   for (size_t i = 0; i < mArguments.size(); ++i)
-      output << "   " << i << ") " << mArguments[i].toString() << "\n";
 }
 //
 
@@ -175,14 +168,28 @@ void VirtualMachine::executeInstruction () {
    switch (op) {
       case OP_REG:
       {
-         small_size_t ucval;
-         *mpProgram >> ucval;
-         for (size_t i = 0; i < (size_t) ucval; i++)
-            mValues.push_back(Value());
-         mActivations.back().firstVariableLocation += ucval;
+         small_size_t nRegisters;
+         *mpProgram >> nRegisters;
+         mValues.resize(mValues.size() + nRegisters);
+         mActivations.back().firstVariableLocation += nRegisters;
          return;
       }
 
+      case OP_PCALL_SF_L:
+      case OP_PCALL_SF_G:
+      {
+         location_t functionLoc;
+         *mpProgram >> functionLoc;
+
+         Value functionValue;
+         if (op == OP_PCALL_SF_G)
+            functionValue = mValues[mActivations.front().firstVariableLocation + functionLoc]; // global
+         else
+            functionValue = mValues[mActivations.back().firstVariableLocation + functionLoc]; //local
+
+         mValues.resize(mValues.size() + functionValue.mnFunctionRegisters);
+         return;
+      }
 
       case OP_CALL_SF_L:
       case OP_CALL_SF_G:
@@ -205,20 +212,9 @@ void VirtualMachine::executeInstruction () {
                error(ss.str());
             }
 
-            ActivationRecord record(mpProgram->getCursorPosition(), mValues.size(), 0);
-            // Create registers
-            for (size_t i = 0; i < functionValue.mnFunctionRegisters; i++)
-               mValues.push_back(Value());
-            // Push activation frame index
-            record.firstVariableLocation = mValues.size();
+            ActivationRecord record(mpProgram->getCursorPosition(), mValues.size() - functionValue.mnFunctionRegisters - nArguments, mValues.size() - nArguments);
             mActivations.push_back(record);
 
-            // Push arguments
-            for (size_t i = mArguments.size() - nArguments; i < mArguments.size(); i++)
-               mValues.push_back(mArguments[i]);
-            // Remove arguments
-            for (size_t i = 0; i < nArguments; i++)
-               mArguments.pop_back();
             // Finally set the current IP
             mpProgram->setCursorPosition(functionValue.mFunctionIndex);
          } else
@@ -234,7 +230,7 @@ void VirtualMachine::executeInstruction () {
          small_size_t nArguments;
          *mpProgram >> hfgID >> fID >> nArguments;
 
-         FunctionCallManager manager(*this, fID, &mArguments[mArguments.size() - nArguments], nArguments);
+         FunctionCallManager manager(*this, fID, &mValues[mValues.size() - nArguments], nArguments);
 
          // Pause the machine
          mRunning = false;
@@ -250,8 +246,7 @@ void VirtualMachine::executeInstruction () {
       case OP_RETURN_NIL:
       {
          // Restore the stack as it was before
-         while (mValues.size() > mActivations.back().stackSize)
-            mValues.pop_back();
+         mValues.resize(mActivations.back().stackSize);
 
          // Return a nil value
          mValues.push_back(Value());
@@ -272,8 +267,7 @@ void VirtualMachine::executeInstruction () {
          Value returnValue = getLocalValue(loc);
 
          // Restore the stack as it was before
-         while (mValues.size() > mActivations.back().stackSize)
-            mValues.pop_back();
+         mValues.resize(mActivations.back().stackSize);
 
          // Return a nil value
          mValues.push_back(returnValue);
@@ -298,8 +292,7 @@ void VirtualMachine::executeInstruction () {
       {
          small_size_t n;
          *mpProgram >> n;
-         for (int i = 0; i < n; i++)
-            mValues.pop_back();
+         mValues.resize(mValues.size() - n);
          return;
       }
 
@@ -312,11 +305,11 @@ void VirtualMachine::executeInstruction () {
          return;
       }
 
-      case OP_PUSH_ARG:
+      case OP_PUSH_VAL:
       {
          location_t loc;
          *mpProgram >> loc;
-         mArguments.push_back(getLocalValue(loc));
+         mValues.push_back(getLocalValue(loc));
          return;
       }
 
@@ -599,9 +592,9 @@ void VirtualMachine::error (const std::string& message) const {
 }
 
 void VirtualMachine::returnValue (const Value& value) {
+   mValues.resize(mValues.size() - mHostFunctionArgumentsCount);
    mValues.push_back(value);
    mRunning = true;
-   mArguments.resize(mArguments.size() - mHostFunctionArgumentsCount);
 }
 
 void VirtualMachine::builtinsGroup (const FunctionCallManager& manager) {

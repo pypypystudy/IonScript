@@ -80,6 +80,10 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
 
       case SyntaxTree::TYPE_IF:
       {
+         if (mDeclareOnly.top()) {
+            return target;
+         }
+
          list<SyntaxTree*>::const_iterator it = tree.getChildren().begin();
          const SyntaxTree* pConditionTree = *it;
 
@@ -111,6 +115,10 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
 
       case SyntaxTree::TYPE_WHILE:
       {
+         if (mDeclareOnly.top()) {
+            return target;
+         }
+
          list<SyntaxTree*>::const_iterator it = tree.getChildren().begin();
 
          mnBlockValueStackSize.push(mNamesStack.size());
@@ -159,6 +167,10 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
 
       case SyntaxTree::TYPE_FOR:
       {
+         if (mDeclareOnly.top()) {
+            return target;
+         }
+
          list<SyntaxTree*>::const_iterator it = tree.getChildren().begin();
 
          mnBlockValueStackSize.push(mNamesStack.size());
@@ -235,6 +247,10 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
 
       case SyntaxTree::TYPE_FUNCTION_DEF:
       {
+         if (mDeclareOnly.top()) {
+            return target;
+         }
+
          location_t loc;
          if (!findLocalName(tree.str, loc)) {
             mNamesStack.push_back(tree.str);
@@ -287,6 +303,11 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
 
       case SyntaxTree::TYPE_RETURN:
       {
+         if (mDeclareOnly.top()) {
+            compile(*tree.left(), output, 0);
+            return target;
+         }
+
          if (tree.hasChildren()) {
             location_t result = compile(*tree.left(), output, target);
             output << OP_RETURN << result;
@@ -298,7 +319,15 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
       }
 
       case SyntaxTree::TYPE_FUNCTION_CALL:
-      { // Lookup for the callable in the names stack
+      {
+         if (mDeclareOnly.top()) {
+            std::list<SyntaxTree*>::const_iterator it;
+            for (it = tree.getChildren().begin(); it != tree.getChildren().end(); it++)
+               compile(**it, output, -1);
+            return target;
+         }
+
+         // Lookup for the callable in the names stack
          OpCode callOp = OP_CALL_SF_G;
          location_t loc = 0; // useless initialization
          HostFunctionGroupID hfgID = 0;
@@ -340,18 +369,36 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
          }
 
          std::list<SyntaxTree*>::const_iterator it;
-         for (it = tree.getChildren().begin(); it != tree.getChildren().end(); it++) {
 
+         mDeclareOnly.push(true);
+         for (it = tree.getChildren().begin(); it != tree.getChildren().end(); it++) {
             location_t regLoc = target;
             if (regLoc >= 0)
                regLoc = -1;
 
             location_t result = compile(**it, output, regLoc);
 
-            if (result < 0)
-               mnRequiredRegisters.top() = max((int) mnRequiredRegisters.top(), (int) -regLoc);
+            mnRequiredRegisters.top() = max((int) mnRequiredRegisters.top(), (int) -result);
+         }
+         mDeclareOnly.pop();
 
-            output << OP_PUSH_ARG << result;
+         if (callOp != OP_CALL_HF) {
+            if (callOp == OP_CALL_SF_G)
+               output << OP_PCALL_SF_G << loc;
+            else
+               output << OP_PCALL_SF_L << loc;
+         }
+
+         for (it = tree.getChildren().begin(); it != tree.getChildren().end(); it++) {
+            location_t regLoc = target;
+            if (regLoc >= 0)
+               regLoc = -1;
+
+            location_t result = compile(**it, output, regLoc);
+
+            mnRequiredRegisters.top() = max((int) mnRequiredRegisters.top(), (int) -result);
+
+            output << OP_PUSH_VAL << result;
          }
 
          if (callOp == OP_CALL_HF)
@@ -369,6 +416,22 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
       case SyntaxTree::TYPE_NIL:
          output << OP_STORE_AT_NIL << target;
          return target;
+
+
+      case SyntaxTree::TYPE_BOOLEAN:
+      {
+         location_t loc;
+         string s = ((tree.boolean) ? "true" : "false");
+         if (findLocalName(s, loc))
+            return loc;
+         else {
+            mNamesStack.push_back(s);
+            output << OP_PUSH;
+            output << OP_STORE_B << tree.boolean;
+            return mNamesStack.size() - 1 - mActivationFramePointer.top();
+
+         }
+      }
 
       case SyntaxTree::TYPE_NUMBER:
       {
@@ -459,6 +522,13 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
 
       case SyntaxTree::TYPE_CONTAINER_ELEMENT:
       {
+         if (mDeclareOnly.top()) {
+            std::list<SyntaxTree*>::const_iterator it;
+            for (it = tree.getChildren().begin(); it != tree.getChildren().end(); it++)
+               compile(**it, output, -1);
+            return target;
+         }
+
          location_t reg = (target < 0) ? target : -1;
          location_t listLoc = compile(*tree.left(), output, reg);
          if (listLoc == reg)
@@ -515,23 +585,14 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
          compileExpressionNodeChildren(tree, output, target, OP_DIV);
          return target;
 
-      case SyntaxTree::TYPE_BOOLEAN:
-      {
-         location_t loc;
-         string s = ((tree.boolean) ? "true" : "false");
-         if (findLocalName(s, loc))
-            return loc;
-         else {
-            mNamesStack.push_back(s);
-            output << OP_PUSH;
-            output << OP_STORE_B << tree.boolean;
-            return mNamesStack.size() - 1 - mActivationFramePointer.top();
-
-         }
-      }
 
       case SyntaxTree::TYPE_NOT:
       {
+         if (mDeclareOnly.top()) {
+            compile(*tree.left(), output, 0);
+            return target;
+         }
+
          location_t reg, left;
 
          reg = (target < 0) ? target : -1;

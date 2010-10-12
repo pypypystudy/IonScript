@@ -153,11 +153,11 @@ void BytecodeReader::print (std::ostream& outStream) {
             outStream << "push";
             break;
 
-         case OP_PUSH_ARG: //push.arg
+         case OP_PUSH_VAL: //push.val
          {
             location_t loc;
             (*this) >> loc;
-            outStream << "push.arg " << (int) loc;
+            outStream << "push.val " << (int) loc;
             break;
          }
 
@@ -283,7 +283,20 @@ void BytecodeReader::print (std::ostream& outStream) {
 
             break;
          }
-
+         case OP_PCALL_SF_G:
+         {
+            location_t function;
+            (*this) >> function;
+            outStream << "pcall_sf.g " << (int) function;
+            break;
+         }
+         case OP_PCALL_SF_L:
+         {
+            location_t function;
+            (*this) >> function;
+            outStream << "pcall_sf.l " << (int) function;
+            break;
+         }
          case OP_CALL_SF_G:
          {
             location_t function;

@@ -145,9 +145,6 @@ namespace ion {
          BytecodeReader* mpProgram;
          /** The stack containing all values. */
          std::vector<Value> mValues;
-         /** The temporary stack containing arguments for the up calling function. */
-         std::vector<Value> mArguments;
-
          /** Convenient data-structure for function calls activation frames management.*/
          struct ActivationRecord {
             index_t returnIndex;

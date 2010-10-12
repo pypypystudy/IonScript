@@ -59,10 +59,10 @@ namespace ion {
          OP_PUSH,
 
          /**
-          * push.arg <location_t: target>
-          * Pushes value at <target> into the argument-stack.
+          * push.val <location_t: target>
+          * Pushes value at <target> onto the value-stack.
           */
-         OP_PUSH_ARG,
+         OP_PUSH_VAL,
 
          /**
           * pop
@@ -225,6 +225,9 @@ namespace ion {
           * Destroyes the funciton-call structure, restores the IP to the previous index and pushes value at <location> into the value-stack.
           */
          OP_RETURN,
+
+         OP_PCALL_SF_G,
+         OP_PCALL_SF_L,
 
          /**
           * call_sf.g <location_t: function>, <small_size_t: arguments_count>
