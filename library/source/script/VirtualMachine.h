@@ -37,6 +37,7 @@
 #include <istream>
 #include <stack>
 #include <map>
+#include <list>
 
 namespace ion {
    namespace script {
@@ -143,26 +144,38 @@ namespace ion {
          /** The actual program bytecode reader. */
          BytecodeReader* mpProgram;
          /** The stack containing all values. */
-         std::vector<Value> mValuesStack;
+         std::vector<Value> mValues;
          /** The temporary stack containing arguments for the up calling function. */
-         std::vector<Value> mArgsVector;
-         /** The stack containing three indices per call.
-          *    1) The return instruction index (instruction pointer).
-          *    2) The stack size at call time.
-          *    3) Activation frame start offset. Indicates the first local variable (before this index there must be nothing or registers).
-          */
-         std::vector<size_t> mIndicesStack;
+         std::vector<Value> mArguments;
+
+         /** Convenient data-structure for function calls activation frames management.*/
+         struct ActivationRecord {
+            index_t returnIndex;
+            size_t stackSize;
+            location_t firstVariableLocation;
+            ActivationRecord() : returnIndex(0), stackSize(0), firstVariableLocation(0) { }
+            ActivationRecord(index_t returnIndex, size_t stackSize, location_t firstVariableLocation) :
+            returnIndex(returnIndex), stackSize(stackSize), firstVariableLocation(firstVariableLocation) { }
+         };
+         /** Stack of all the activation frames */
+         std::list<ActivationRecord> mActivations;
          /** Is the VM running? */
          bool mRunning;
          /** The number of arguments of the just called host function. NOTE: the VM always calls one HF at a time so there's no possibility for nested HF calls. */
          size_t mHostFunctionArgumentsCount;
-
          /**
           * Executes a single instruction.
           */
          void executeInstruction ();
          /**
-          * Throws a runtime exception.
+          * Auxiliary function that returns the local value at given location.
+          */
+         inline Value& getLocalValue (location_t loc) {
+            return mValues[mActivations.back().firstVariableLocation + loc];
+         }
+         /**
+          * Throws a RuntimeError with given message.
+          * @param message message of the error.
           */
          void error (const std::string& message) const;
          /**

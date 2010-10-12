@@ -129,15 +129,14 @@ void VirtualMachine::run (std::vector<char>& program) {
 
    mpProgram = new BytecodeReader(program);
 
-   mValuesStack.clear();
-   // Preallocate alues
-   mValuesStack.reserve(40);
+   mValues.clear();
+   mValues.reserve(40);
 
-   mIndicesStack.clear();
-   mArgsVector.clear();
-   mArgsVector.reserve(10);
+   mActivations.clear();
+   mActivations.push_back(ActivationRecord());
 
-   mIndicesStack.push_back(0); // Stack pointer
+   mArguments.clear();
+   mArguments.reserve(10);
 
    mRunning = true;
 
@@ -149,16 +148,23 @@ void VirtualMachine::run (std::vector<char>& program) {
 
 void VirtualMachine::dump (std::ostream& output) {
    output << "Values-Stack:\n";
-   for (size_t i = 0; i < mValuesStack.size(); ++i)
-      output << "   " << i << ", " << (long) i - (long) mIndicesStack.back() << ") " << mValuesStack[i].toString() << "\n";
+   for (size_t i = 0; i < mValues.size(); ++i)
+      output << "   " << i << ", " << (long) i - (long) mActivations.back().firstVariableLocation << ") " << mValues[i].toString() << "\n";
 
-   output << "Indices-Stack:\n";
-   for (size_t i = 0; i < mIndicesStack.size(); ++i)
-      output << "   " << i << ") " << mIndicesStack[i] << "\n";
+   output << "Activations-Stack:\n";
+   list<ActivationRecord>::const_iterator it = mActivations.begin();
+   size_t i = 0;
+   for (; it != mActivations.end(); ++it) {
+      output << "   " << i << ") " <<
+         "return-index : " << it->returnIndex << ";" <<
+         "stack-size: " << it->stackSize << ";" <<
+         "first-variable-loc: " << it->firstVariableLocation << "\n";
+      i++;
+   }
 
    output << "Arguments-Vector:\n";
-   for (size_t i = 0; i < mArgsVector.size(); ++i)
-      output << "   " << i << ") " << mArgsVector[i].toString() << "\n";
+   for (size_t i = 0; i < mArguments.size(); ++i)
+      output << "   " << i << ") " << mArguments[i].toString() << "\n";
 }
 //
 
@@ -172,8 +178,8 @@ void VirtualMachine::executeInstruction () {
          small_size_t ucval;
          *mpProgram >> ucval;
          for (size_t i = 0; i < (size_t) ucval; i++)
-            mValuesStack.push_back(Value());
-         mIndicesStack.back() += ucval;
+            mValues.push_back(Value());
+         mActivations.back().firstVariableLocation += ucval;
          return;
       }
 
@@ -187,9 +193,9 @@ void VirtualMachine::executeInstruction () {
 
          Value functionValue;
          if (op == OP_CALL_SF_G)
-            functionValue = mValuesStack[mIndicesStack[0] + functionLoc]; // global
+            functionValue = mValues[mActivations.front().firstVariableLocation + functionLoc]; // global
          else
-            functionValue = mValuesStack[mIndicesStack.back() + functionLoc]; //local
+            functionValue = mValues[mActivations.back().firstVariableLocation + functionLoc]; //local
 
          if (functionValue.mType == Value::TYPE_SCRIPT_FUNCTION) {
             // Check whether the required number of arguments corresponds to the one given.
@@ -198,21 +204,21 @@ void VirtualMachine::executeInstruction () {
                ss << "wrong number of arguments given (" << (int) nArguments << " instead of " << (int) functionValue.mnArguments << ").";
                error(ss.str());
             }
-            // Push return index
-            mIndicesStack.push_back(mpProgram->getCursorPosition());
-            // Push stack size
-            mIndicesStack.push_back(mValuesStack.size());
+
+            ActivationRecord record(mpProgram->getCursorPosition(), mValues.size(), 0);
             // Create registers
             for (size_t i = 0; i < functionValue.mnFunctionRegisters; i++)
-               mValuesStack.push_back(Value());
+               mValues.push_back(Value());
             // Push activation frame index
-            mIndicesStack.push_back(mValuesStack.size());
+            record.firstVariableLocation = mValues.size();
+            mActivations.push_back(record);
+
             // Push arguments
-            for (size_t i = mArgsVector.size() - nArguments; i < mArgsVector.size(); i++)
-               mValuesStack.push_back(mArgsVector[i]);
+            for (size_t i = mArguments.size() - nArguments; i < mArguments.size(); i++)
+               mValues.push_back(mArguments[i]);
             // Remove arguments
             for (size_t i = 0; i < nArguments; i++)
-               mArgsVector.pop_back();
+               mArguments.pop_back();
             // Finally set the current IP
             mpProgram->setCursorPosition(functionValue.mFunctionIndex);
          } else
@@ -228,7 +234,7 @@ void VirtualMachine::executeInstruction () {
          small_size_t nArguments;
          *mpProgram >> hfgID >> fID >> nArguments;
 
-         FunctionCallManager manager(*this, fID, &mArgsVector[mArgsVector.size() - nArguments], nArguments);
+         FunctionCallManager manager(*this, fID, &mArguments[mArguments.size() - nArguments], nArguments);
 
          // Pause the machine
          mRunning = false;
@@ -243,16 +249,17 @@ void VirtualMachine::executeInstruction () {
 
       case OP_RETURN_NIL:
       {
-         while (mValuesStack.size() > mIndicesStack[mIndicesStack.size() - 2])
-            mValuesStack.pop_back();
+         // Restore the stack as it was before
+         while (mValues.size() > mActivations.back().stackSize)
+            mValues.pop_back();
 
-         mValuesStack.push_back(Value());
+         // Return a nil value
+         mValues.push_back(Value());
 
-         mpProgram->setCursorPosition(mIndicesStack[mIndicesStack.size() - 3]);
+         // Set the Instruction Pointer
+         mpProgram->setCursorPosition(mActivations.back().returnIndex);
 
-         mIndicesStack.pop_back();
-         mIndicesStack.pop_back();
-         mIndicesStack.pop_back();
+         mActivations.pop_back();
 
          return;
       }
@@ -262,28 +269,29 @@ void VirtualMachine::executeInstruction () {
          location_t loc;
          *mpProgram >> loc;
 
-         Value returnValue = mValuesStack[mIndicesStack.back() + loc];
+         Value returnValue = getLocalValue(loc);
 
-         while (mValuesStack.size() > mIndicesStack[mIndicesStack.size() - 2])
-            mValuesStack.pop_back();
+         // Restore the stack as it was before
+         while (mValues.size() > mActivations.back().stackSize)
+            mValues.pop_back();
 
-         mValuesStack.push_back(returnValue);
+         // Return a nil value
+         mValues.push_back(returnValue);
 
-         mpProgram->setCursorPosition(mIndicesStack[mIndicesStack.size() - 3]);
+         // Set the Instruction Pointer
+         mpProgram->setCursorPosition(mActivations.back().returnIndex);
 
-         mIndicesStack.pop_back();
-         mIndicesStack.pop_back();
-         mIndicesStack.pop_back();
+         mActivations.pop_back();
 
          return;
       }
 
       case OP_PUSH:
-         mValuesStack.push_back(Value());
+         mValues.push_back(Value());
          return;
 
       case OP_POP:
-         mValuesStack.pop_back();
+         mValues.pop_back();
          return;
 
       case OP_POP_N:
@@ -291,7 +299,7 @@ void VirtualMachine::executeInstruction () {
          small_size_t n;
          *mpProgram >> n;
          for (int i = 0; i < n; i++)
-            mValuesStack.pop_back();
+            mValues.pop_back();
          return;
       }
 
@@ -299,8 +307,8 @@ void VirtualMachine::executeInstruction () {
       {
          location_t loc;
          *mpProgram >> loc;
-         mValuesStack[mIndicesStack.back() + loc] = mValuesStack.back();
-         mValuesStack.pop_back();
+         getLocalValue(loc) = mValues.back();
+         mValues.pop_back();
          return;
       }
 
@@ -308,7 +316,7 @@ void VirtualMachine::executeInstruction () {
       {
          location_t loc;
          *mpProgram >> loc;
-         mArgsVector.push_back(mValuesStack[mIndicesStack.back() + loc]);
+         mArguments.push_back(getLocalValue(loc));
          return;
       }
 
@@ -316,7 +324,7 @@ void VirtualMachine::executeInstruction () {
       {
          int ival;
          *mpProgram >> ival;
-         mValuesStack.back() = ival;
+         mValues.back() = ival;
          return;
       }
 
@@ -324,7 +332,7 @@ void VirtualMachine::executeInstruction () {
       {
          double dval;
          *mpProgram >> dval;
-         mValuesStack.back() = dval;
+         mValues.back() = dval;
          return;
       }
 
@@ -332,7 +340,7 @@ void VirtualMachine::executeInstruction () {
       {
          string str;
          *mpProgram >> str;
-         mValuesStack.back() = str;
+         mValues.back() = str;
          return;
       }
 
@@ -340,7 +348,7 @@ void VirtualMachine::executeInstruction () {
       {
          bool b;
          *mpProgram >> b;
-         mValuesStack.back() = b;
+         mValues.back() = b;
          break;
       }
 
@@ -348,7 +356,7 @@ void VirtualMachine::executeInstruction () {
       {
          location_t loc;
          *mpProgram >> loc;
-         mValuesStack[mIndicesStack.back() + loc].setNil();
+         getLocalValue(loc).setNil();
          break;
       }
 
@@ -358,7 +366,7 @@ void VirtualMachine::executeInstruction () {
          location_t loc;
          small_size_t nArguments, nRegisters;
          *mpProgram >> loc >> index >> nArguments >> nRegisters;
-         mValuesStack[mIndicesStack.back() + loc].setFunctionValue(index, nArguments, nRegisters);
+         getLocalValue(loc).setFunctionValue(index, nArguments, nRegisters);
          return;
       }
 
@@ -366,7 +374,7 @@ void VirtualMachine::executeInstruction () {
       {
          location_t listLoc;
          *mpProgram >> listLoc;
-         mValuesStack[mIndicesStack.back() + listLoc].setEmptyList();
+         getLocalValue(listLoc).setEmptyList();
          return;
       }
 
@@ -374,7 +382,7 @@ void VirtualMachine::executeInstruction () {
       {
          location_t listLoc, indexLoc;
          *mpProgram >> listLoc >> indexLoc;
-         mValuesStack[mIndicesStack.back() + listLoc].getList().push_back(mValuesStack[mIndicesStack.back() + indexLoc]);
+         getLocalValue(listLoc).getList().push_back(getLocalValue(indexLoc));
          return;
       }
 
@@ -382,7 +390,7 @@ void VirtualMachine::executeInstruction () {
       {
          location_t dictLoc;
          *mpProgram >> dictLoc;
-         mValuesStack[mIndicesStack.back() + dictLoc].setEmptyDictionary();
+         getLocalValue(dictLoc).setEmptyDictionary();
          return;
       }
 
@@ -390,7 +398,7 @@ void VirtualMachine::executeInstruction () {
       {
          location_t dictLoc, keyLoc, valueLoc;
          *mpProgram >> dictLoc >> keyLoc >> valueLoc;
-         mValuesStack[mIndicesStack.back() + dictLoc].getDictionary()[ mValuesStack[mIndicesStack.back() + keyLoc]] = mValuesStack[mIndicesStack.back() + valueLoc];
+         getLocalValue(dictLoc).getDictionary()[ getLocalValue(keyLoc)] = getLocalValue(valueLoc);
          return;
       }
 
@@ -398,28 +406,28 @@ void VirtualMachine::executeInstruction () {
       {
          location_t targetLoc, contLoc, indexLoc;
          *mpProgram >> targetLoc >> contLoc >> indexLoc;
-         Value& cont = mValuesStack[mIndicesStack.back() + contLoc];
+         Value& cont = getLocalValue(contLoc);
 
          cont.assertType(Value::TYPE_LIST | Value::TYPE_DICTIONARY);
 
          if (cont.isList()) {
 
-            mValuesStack[mIndicesStack.back() + indexLoc].assertIsPositiveInteger();
+            getLocalValue(indexLoc).assertIsPositiveInteger();
 
-            size_t index = static_cast<size_t> (mValuesStack[mIndicesStack.back() + indexLoc].getNumber());
+            size_t index = static_cast<size_t> (getLocalValue(indexLoc).getNumber());
 
             if (index >= cont.getList().size())
                throw RuntimeError("index out of list boundaries.");
 
-            mValuesStack[mIndicesStack.back() + targetLoc] = cont.getListElement(index);
+            getLocalValue(targetLoc) = cont.getListElement(index);
 
          } else {
 
-            Dictionary::const_iterator it = cont.getDictionary().find(mValuesStack[mIndicesStack.back() + indexLoc]);
+            Dictionary::const_iterator it = cont.getDictionary().find(getLocalValue(indexLoc));
             if (it == cont.getDictionary().end())
                throw RuntimeError("key not found in dictionary.");
             else
-               mValuesStack[mIndicesStack.back() + targetLoc] = it->second;
+               getLocalValue(targetLoc) = it->second;
          }
 
          return;
@@ -429,23 +437,23 @@ void VirtualMachine::executeInstruction () {
       {
          location_t valueLoc, contLoc, indexLoc;
          *mpProgram >> valueLoc >> contLoc >> indexLoc;
-         Value& cont = mValuesStack[mIndicesStack.back() + contLoc];
+         Value& cont = getLocalValue(contLoc);
 
          cont.assertType(Value::TYPE_LIST | Value::TYPE_DICTIONARY);
 
          if (cont.isList()) {
 
-            mValuesStack[mIndicesStack.back() + indexLoc].assertIsPositiveInteger();
+            getLocalValue(indexLoc).assertIsPositiveInteger();
 
-            size_t index = static_cast<size_t> (mValuesStack[mIndicesStack.back() + indexLoc].getNumber());
+            size_t index = static_cast<size_t> (getLocalValue(indexLoc).getNumber());
 
             if (index >= cont.getList().size())
                throw RuntimeError("index out of list boundaries.");
 
-            cont.getList()[index] = mValuesStack[mIndicesStack.back() + valueLoc];
+            cont.getList()[index] = getLocalValue(valueLoc);
 
          } else
-            cont.getDictionary()[mValuesStack[mIndicesStack.back() + indexLoc]] = mValuesStack[mIndicesStack.back() + valueLoc];
+            cont.getDictionary()[getLocalValue(indexLoc)] = getLocalValue(valueLoc);
 
          return;
       }
@@ -456,7 +464,7 @@ void VirtualMachine::executeInstruction () {
       {
          location_t loc1, loc2;
          *mpProgram >> loc1 >> loc2;
-         mValuesStack[mIndicesStack.back() + loc1] = mValuesStack[mIndicesStack.back() + loc2];
+         getLocalValue(loc1) = getLocalValue(loc2);
          return;
       }
 
@@ -464,14 +472,14 @@ void VirtualMachine::executeInstruction () {
       {
          location_t loc1, loc2, loc3;
          *mpProgram >> loc1 >> loc2 >> loc3;
-         mValuesStack[mIndicesStack.back() + loc1] = mValuesStack[mIndicesStack.back() + loc2] + mValuesStack[mIndicesStack.back() + loc3];
+         getLocalValue(loc1) = getLocalValue(loc2) + getLocalValue(loc3);
          return;
       }
       case OP_SUB:
       {
          location_t loc1, loc2, loc3;
          *mpProgram >> loc1 >> loc2 >> loc3;
-         mValuesStack[mIndicesStack.back() + loc1] = mValuesStack[mIndicesStack.back() + loc2] - mValuesStack[mIndicesStack.back() + loc3];
+         getLocalValue(loc1) = getLocalValue(loc2) - getLocalValue(loc3);
          return;
       }
 
@@ -479,7 +487,7 @@ void VirtualMachine::executeInstruction () {
       {
          location_t loc1, loc2, loc3;
          *mpProgram >> loc1 >> loc2 >> loc3;
-         mValuesStack[mIndicesStack.back() + loc1] = mValuesStack[mIndicesStack.back() + loc2] * mValuesStack[mIndicesStack.back() + loc3];
+         getLocalValue(loc1) = getLocalValue(loc2) * getLocalValue(loc3);
          return;
       }
 
@@ -487,7 +495,7 @@ void VirtualMachine::executeInstruction () {
       {
          location_t loc1, loc2, loc3;
          *mpProgram >> loc1 >> loc2 >> loc3;
-         mValuesStack[mIndicesStack.back() + loc1] = mValuesStack[mIndicesStack.back() + loc2] / mValuesStack[mIndicesStack.back() + loc3];
+         getLocalValue(loc1) = getLocalValue(loc2) / getLocalValue(loc3);
          return;
       }
 
@@ -503,7 +511,7 @@ void VirtualMachine::executeInstruction () {
          location_t loc;
          index_t index;
          *mpProgram >> loc >> index;
-         if (!mValuesStack[mIndicesStack.back() + loc].toBoolean())
+         if (!getLocalValue(loc).toBoolean())
             mpProgram->setCursorPosition(index);
          return;
       }
@@ -512,7 +520,7 @@ void VirtualMachine::executeInstruction () {
       {
          location_t loc1, loc2;
          *mpProgram >> loc1 >> loc2;
-         mValuesStack[mIndicesStack.back() + loc1] = !mValuesStack[mIndicesStack.back() + loc2 ];
+         getLocalValue(loc1) = !getLocalValue(loc2);
          return;
       }
 
@@ -520,7 +528,7 @@ void VirtualMachine::executeInstruction () {
       {
          location_t loc1, loc2, loc3;
          *mpProgram >> loc1 >> loc2 >> loc3;
-         mValuesStack[mIndicesStack.back() + loc1] = mValuesStack[mIndicesStack.back() + loc2 ] && mValuesStack[mIndicesStack.back() + loc3 ];
+         getLocalValue(loc1) = getLocalValue(loc2) && getLocalValue(loc3);
          return;
       }
 
@@ -528,7 +536,7 @@ void VirtualMachine::executeInstruction () {
       {
          location_t loc1, loc2, loc3;
          *mpProgram >> loc1 >> loc2 >> loc3;
-         mValuesStack[mIndicesStack.back() + loc1] = mValuesStack[mIndicesStack.back() + loc2 ] || mValuesStack[mIndicesStack.back() + loc3 ];
+         getLocalValue(loc1) = getLocalValue(loc2) || getLocalValue(loc3);
          return;
       }
 
@@ -536,7 +544,7 @@ void VirtualMachine::executeInstruction () {
       {
          location_t loc1, loc2, loc3;
          *mpProgram >> loc1 >> loc2 >> loc3;
-         mValuesStack[mIndicesStack.back() + loc1] = mValuesStack[mIndicesStack.back() + loc2 ] == mValuesStack[mIndicesStack.back() + loc3 ];
+         getLocalValue(loc1) = getLocalValue(loc2) == getLocalValue(loc3);
          return;
       }
 
@@ -544,7 +552,7 @@ void VirtualMachine::executeInstruction () {
       {
          location_t loc1, loc2, loc3;
          *mpProgram >> loc1 >> loc2 >> loc3;
-         mValuesStack[mIndicesStack.back() + loc1] = mValuesStack[mIndicesStack.back() + loc2 ] != mValuesStack[mIndicesStack.back() + loc3 ];
+         getLocalValue(loc1) = getLocalValue(loc2) != getLocalValue(loc3);
          return;
       }
 
@@ -552,7 +560,7 @@ void VirtualMachine::executeInstruction () {
       {
          location_t loc1, loc2, loc3;
          *mpProgram >> loc1 >> loc2 >> loc3;
-         mValuesStack[mIndicesStack.back() + loc1] = mValuesStack[mIndicesStack.back() + loc2 ] > mValuesStack[mIndicesStack.back() + loc3 ];
+         getLocalValue(loc1) = getLocalValue(loc2) > getLocalValue(loc3);
          return;
       }
 
@@ -560,7 +568,7 @@ void VirtualMachine::executeInstruction () {
       {
          location_t loc1, loc2, loc3;
          *mpProgram >> loc1 >> loc2 >> loc3;
-         mValuesStack[mIndicesStack.back() + loc1] = mValuesStack[mIndicesStack.back() + loc2 ] >= mValuesStack[mIndicesStack.back() + loc3 ];
+         getLocalValue(loc1) = getLocalValue(loc2) >= getLocalValue(loc3);
          return;
       }
 
@@ -568,7 +576,7 @@ void VirtualMachine::executeInstruction () {
       {
          location_t loc1, loc2, loc3;
          *mpProgram >> loc1 >> loc2 >> loc3;
-         mValuesStack[mIndicesStack.back() + loc1] = mValuesStack[mIndicesStack.back() + loc2 ] < mValuesStack[mIndicesStack.back() + loc3 ];
+         getLocalValue(loc1) = getLocalValue(loc2) < getLocalValue(loc3);
          return;
       }
 
@@ -576,7 +584,7 @@ void VirtualMachine::executeInstruction () {
       {
          location_t loc1, loc2, loc3;
          *mpProgram >> loc1 >> loc2 >> loc3;
-         mValuesStack[mIndicesStack.back() + loc1] = mValuesStack[mIndicesStack.back() + loc2 ] <= mValuesStack[mIndicesStack.back() + loc3 ];
+         getLocalValue(loc1) = getLocalValue(loc2) <= getLocalValue(loc3);
          return;
       }
 
@@ -591,9 +599,9 @@ void VirtualMachine::error (const std::string& message) const {
 }
 
 void VirtualMachine::returnValue (const Value& value) {
-   mValuesStack.push_back(value);
+   mValues.push_back(value);
    mRunning = true;
-   mArgsVector.resize(mArgsVector.size() - mHostFunctionArgumentsCount);
+   mArguments.resize(mArguments.size() - mHostFunctionArgumentsCount);
 }
 
 void VirtualMachine::builtinsGroup (const FunctionCallManager& manager) {
