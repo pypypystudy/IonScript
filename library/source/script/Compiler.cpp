@@ -449,10 +449,10 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
       case SyntaxTree::TYPE_STRING:
       {
          location_t loc = 0;
-         if (findLocalName(tree.str, loc))
+         if (findLocalName("$" + tree.str, loc)) // the $ symbol is used to avoid identifier name conflicts
             return loc;
          else {
-            mNamesStack.push_back(tree.str);
+            mNamesStack.push_back("$" + tree.str);
             output << OP_PUSH_S << tree.str;
             return mNamesStack.size() - 1 - mActivationFramePointer.top();
          }
