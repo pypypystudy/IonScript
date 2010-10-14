@@ -145,7 +145,54 @@ void VirtualMachine::run(std::vector<char>& program) {
    mRunning = false;
 }
 
-void VirtualMachine::dump(std::ostream& output) {
+Value VirtualMachine::callScriptFunction(const Value& function, const Value& argument) {
+   const Value * arguments[] = {&argument};
+   return callScriptFunction(function, arguments, 1);
+}
+
+Value VirtualMachine::callScriptFunction(const Value& function, const Value& argument1, const Value& argument2) {
+   const Value * arguments[] = {&argument1, &argument2};
+   return callScriptFunction(function, arguments, 2);
+}
+
+Value VirtualMachine::callScriptFunction(const Value& function, const Value** argument, size_t nArguments) {
+   function.assertType(Value::TYPE_SCRIPT_FUNCTION);
+
+   // Check whether the required number of arguments corresponds to the one given.
+   if (function.mnArguments != nArguments) {
+      stringstream ss;
+      ss << "wrong number of arguments given (" << (int) nArguments << " instead of " << (int) function.mnArguments << ").";
+      error(ss.str());
+   }
+   index_t oldIP = mpProgram->getCursorPosition();
+
+   // Push registers
+   for (size_t i = 0; i < function.mnFunctionRegisters; i++)
+      mValues.push_back(Value());
+
+   // Push arguments
+   for (size_t i = 0; i < nArguments; i++)
+      mValues.push_back(*argument[i]);
+
+   // Finally set the current IP
+   mpProgram->setCursorPosition(function.mFunctionIndex);
+
+   ActivationRecord record(0, mValues.size() - function.mnFunctionRegisters - nArguments, mValues.size() - nArguments);
+   mActivations.push_back(record);
+
+   while (mpProgram->getCursorPosition() != 0)
+      executeInstruction();
+
+   mpProgram->setCursorPosition(oldIP);
+
+   // Pop the result and return it
+   Value result = mValues.back();
+   mValues.pop_back();
+
+   return result;
+}
+
+void VirtualMachine::dump(std::ostream & output) {
    output << "Values-Stack:\n";
    for (size_t i = 0; i < mValues.size(); ++i)
       output << "   " << i << ", " << (long) i - (long) mActivations.back().firstVariableLocation << ") " << mValues[i].toString() << "\n";
@@ -586,18 +633,18 @@ void VirtualMachine::executeInstruction() {
    }
 }
 
-void VirtualMachine::error(const std::string& message) const {
+void VirtualMachine::error(const std::string & message) const {
    throw RuntimeError(message);
 }
 
-void VirtualMachine::returnValue(const Value& value) {
+void VirtualMachine::returnValue(const Value & value) {
    for (size_t i = 0; i < mHostFunctionArgumentsCount; i++)
       mValues.pop_back();
    mValues.push_back(value);
    mRunning = true;
 }
 
-void VirtualMachine::builtinsGroup(const FunctionCallManager& manager) {
+void VirtualMachine::builtinsGroup(const FunctionCallManager & manager) {
    switch (manager.getFunctionID()) {
       case BFID_PRINT:
          for (size_t i = 0; i < manager.getArgumentsCount(); i++) {
