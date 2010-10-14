@@ -51,9 +51,10 @@ enum {
    BFID_DUMP,
    BFID_STR,
    BFID_JOIN,
+   BFID_ERROR,
 };
 
-VirtualMachine::VirtualMachine () : mpProgram (0) {
+VirtualMachine::VirtualMachine() : mpProgram(0) {
    HostFunctionGroupID hfgID = registerHostFunctionGroup(builtinsGroup);
    setFunction("print", hfgID, BFID_PRINT, 0, -1);
    setFunction("post", hfgID, BFID_POST, 1);
@@ -65,19 +66,20 @@ VirtualMachine::VirtualMachine () : mpProgram (0) {
    setFunction("dump", hfgID, BFID_DUMP); // no arguments
    setFunction("str", hfgID, BFID_STR, 1);
    setFunction("join", hfgID, BFID_JOIN, 2, -1);
+   setFunction("error", hfgID, BFID_ERROR, 1);
 }
 
-VirtualMachine::~VirtualMachine () {
+VirtualMachine::~VirtualMachine() {
    if (mpProgram)
       delete mpProgram;
 }
 
-HostFunctionGroupID VirtualMachine::registerHostFunctionGroup (HostFunction function) {
+HostFunctionGroupID VirtualMachine::registerHostFunctionGroup(HostFunction function) {
    mHostFunctionGroups.push_back(function);
    return mHostFunctionGroups.size() - 1;
 }
 
-void VirtualMachine::setFunction (const std::string& name, HostFunctionGroupID hostFunctionID, FunctionID functionID, int minArgumentsCount, int maxArgumentsCount) {
+void VirtualMachine::setFunction(const std::string& name, HostFunctionGroupID hostFunctionID, FunctionID functionID, int minArgumentsCount, int maxArgumentsCount) {
    if (maxArgumentsCount == -2 || (maxArgumentsCount != -1 && maxArgumentsCount < minArgumentsCount))
       maxArgumentsCount = minArgumentsCount;
 
@@ -90,19 +92,19 @@ void VirtualMachine::setFunction (const std::string& name, HostFunctionGroupID h
    mHostFunctionsMap[name] = info;
 }
 
-void VirtualMachine::post (const std::string& name, const Value& value) {
+void VirtualMachine::post(const std::string& name, const Value& value) {
    mGlobalVariables[name] = value;
 }
 
-bool VirtualMachine::hasGlobalVariable (const std::string& name) const {
+bool VirtualMachine::hasGlobalVariable(const std::string& name) const {
    return mGlobalVariables.find(name) != mGlobalVariables.end();
 }
 
-void VirtualMachine::undefineVariable (const std::string& name) {
+void VirtualMachine::undefineVariable(const std::string& name) {
    mGlobalVariables.erase(name);
 }
 
-Value& VirtualMachine::get (const std::string& name) {
+Value& VirtualMachine::get(const std::string& name) {
    map<string, Value>::iterator it = mGlobalVariables.find(name);
    if (it == mGlobalVariables.end())
       throw UndefinedGlobalVariableException(name);
@@ -110,12 +112,12 @@ Value& VirtualMachine::get (const std::string& name) {
       return it->second;
 }
 
-void VirtualMachine::compile (std::istream& source, std::vector<char>& output) {
+void VirtualMachine::compile(std::istream& source, std::vector<char>& output) {
    SyntaxTree tree;
    compile(source, output, tree);
 }
 
-void VirtualMachine::compile (std::istream& source, std::vector<char>& output, SyntaxTree& tree) {
+void VirtualMachine::compile(std::istream& source, std::vector<char>& output, SyntaxTree& tree) {
    Parser parser(source);
    parser.parse(tree);
    BytecodeWriter writer(output);
@@ -123,7 +125,7 @@ void VirtualMachine::compile (std::istream& source, std::vector<char>& output, S
    compiler.compile(tree, writer);
 }
 
-void VirtualMachine::run (std::vector<char>& program) {
+void VirtualMachine::run(std::vector<char>& program) {
    if (mpProgram)
       delete mpProgram;
 
@@ -143,7 +145,7 @@ void VirtualMachine::run (std::vector<char>& program) {
    mRunning = false;
 }
 
-void VirtualMachine::dump (std::ostream& output) {
+void VirtualMachine::dump(std::ostream& output) {
    output << "Values-Stack:\n";
    for (size_t i = 0; i < mValues.size(); ++i)
       output << "   " << i << ", " << (long) i - (long) mActivations.back().firstVariableLocation << ") " << mValues[i].toString() << "\n";
@@ -161,7 +163,7 @@ void VirtualMachine::dump (std::ostream& output) {
 }
 //
 
-void VirtualMachine::executeInstruction () {
+void VirtualMachine::executeInstruction() {
    OpCode op;
    *mpProgram >> op;
 
@@ -584,18 +586,18 @@ void VirtualMachine::executeInstruction () {
    }
 }
 
-void VirtualMachine::error (const std::string& message) const {
+void VirtualMachine::error(const std::string& message) const {
    throw RuntimeError(message);
 }
 
-void VirtualMachine::returnValue (const Value& value) {
+void VirtualMachine::returnValue(const Value& value) {
    for (size_t i = 0; i < mHostFunctionArgumentsCount; i++)
       mValues.pop_back();
    mValues.push_back(value);
    mRunning = true;
 }
 
-void VirtualMachine::builtinsGroup (const FunctionCallManager& manager) {
+void VirtualMachine::builtinsGroup(const FunctionCallManager& manager) {
    switch (manager.getFunctionID()) {
       case BFID_PRINT:
          for (size_t i = 0; i < manager.getArgumentsCount(); i++) {
@@ -698,6 +700,11 @@ void VirtualMachine::builtinsGroup (const FunctionCallManager& manager) {
          manager.returnString(result);
          return;
       }
+
+      case BFID_ERROR:
+         manager.assertArgumentType(0, Value::TYPE_STRING);
+         throw RuntimeError(manager.getArgument(0).getString());
+         return;
 
       default:
          manager.returnNil();
