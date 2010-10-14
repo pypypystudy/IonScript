@@ -83,6 +83,7 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
          if (mDeclareOnly.top()) {
             return target;
          }
+         mnBlockValueStackSize.push(mNamesStack.size());
 
          list<SyntaxTree*>::const_iterator it = tree.getChildren().begin();
          const SyntaxTree* pConditionTree = *it;
@@ -110,6 +111,9 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
 
          } else
             output.set(jumpIndex, (index_t) output.getSize());
+
+         deleteValues(mnBlockValueStackSize.top(), output, true);
+         mnBlockValueStackSize.pop();
          break;
       }
 
