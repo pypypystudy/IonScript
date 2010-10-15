@@ -1,4 +1,9 @@
 * Change log
+	* 0.15.1
+		* You can call script-functions from within your C++ application by the VirtualMachine::callScriptFunction() method.
+		* error() builtin function supported. It throws a runtime error message.
+		* Major bug fixes.
+		
 	* 0.14
 		* Arguments are not copied to a temporary buffer anymore. They are pushed onto the value-stack so no additional copy is required.
 		* store.x ops replaced by push.x ops.

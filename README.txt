@@ -1,4 +1,4 @@
-** IonScript v. 0.13
+** IonScript
 ** Canio Massimo Tristano, <massimo.tristano@gmail.com>
 ** This software is released under a GPL + exception license. See COPYING for further informations.
 
