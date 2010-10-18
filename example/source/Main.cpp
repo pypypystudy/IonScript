@@ -100,8 +100,8 @@ int main (int argc, char** argv) {
          compileDuration = timer.getDuration() * 1000;
          cout << "done! (size: " << bytecode.size() << " bytes)" << endl;
 
-         BytecodeReader r(&bytecode[0]);
-         r.print(std::cout);
+//         BytecodeReader r(&bytecode[0]);
+//         r.print(std::cout);
 
          cout << ">> Executing..." << endl;
          timer.reset();
