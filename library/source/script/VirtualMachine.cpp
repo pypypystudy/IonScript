@@ -111,7 +111,7 @@ Value& VirtualMachine::get (const std::string& name) {
    else
       return it->second;
 }
-
+ 
 void VirtualMachine::compile (std::istream& source, std::vector<char>& output) {
    SyntaxTree tree;
    compile(source, output, tree);
@@ -125,11 +125,19 @@ void VirtualMachine::compile (std::istream& source, std::vector<char>& output, S
    compiler.compile(tree, writer);
 }
 
-void VirtualMachine::run (std::vector<char>& program) {
-   if (mpProgram)
-      delete mpProgram;
+void VirtualMachine::run (char* program) {
+   delete mpProgram;
 
    mpProgram = new BytecodeReader(program);
+
+   unsigned int magicNumber, version;
+   size_t size;
+   *mpProgram >> magicNumber >> version >> size;
+
+   if (magicNumber != kMagicNumber)
+      throw RuntimeError("Given bytes do not form a valid bytecode.");
+   if (version > kVersion)
+      throw RuntimeError("Given bytecode has version higher than this Virtual Machine one.");
 
    mValues.clear();
    mValues.reserve(40);
@@ -149,7 +157,7 @@ void VirtualMachine::compileAndRun (std::istream& source) {
    std::vector<char> bytecode;
    SyntaxTree tree;
    compile(source, bytecode, tree);
-   run(bytecode);
+   run(&bytecode[0]);
 }
 
 Value VirtualMachine::callScriptFunction (const Value& function, const Value& argument) {

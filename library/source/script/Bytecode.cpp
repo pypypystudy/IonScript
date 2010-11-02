@@ -119,17 +119,27 @@ BytecodeWriter & BytecodeWriter::operator<< (bool data) {
 
 //
 
-BytecodeReader::BytecodeReader (std::vector<char>& output) : mPosition (0), mOutput (output) { }
+BytecodeReader::BytecodeReader (char* output) {
+   mOutput = output;
+   mPosition = sizeof (unsigned int) * 2;
+   *this >> mSize;
+   mPosition = 0;
+}
 
 bool BytecodeReader::continues () const {
-
-   return mPosition < mOutput.size();
+   return mPosition < mSize;
 }
 
 void BytecodeReader::print (std::ostream& outStream) {
    size_t line = 0;
    mPosition = 0;
-   while (mPosition < mOutput.size()) {
+
+   unsigned int magicNumber, version;
+   size_t size;
+   *this >> magicNumber >> version >> size;
+   outStream << "IonScript Bytecode\nVersion: " << version << "\nSize: " << size << "\nInstructions:\n";
+
+   while (mPosition < mSize) {
       cout << mPosition << ". ";
 
       OpCode op;
@@ -181,13 +191,13 @@ void BytecodeReader::print (std::ostream& outStream) {
             break;
          }
 
-//         case OP_PUSH_I: // store.i  <integer>
-//         {
-//            int integer;
-//            (*this) >> integer;
-//            outStream << "store.i " << integer;
-//            break;
-//         }
+            //         case OP_PUSH_I: // store.i  <integer>
+            //         {
+            //            int integer;
+            //            (*this) >> integer;
+            //            outStream << "store.i " << integer;
+            //            break;
+            //         }
 
          case OP_PUSH_N:
          {

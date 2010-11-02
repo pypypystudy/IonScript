@@ -127,7 +127,7 @@ namespace ion {
           * Executes given bytecode.
           * @param program the bytecode to be executed.
           */
-         void run (std::vector<char>& program);
+         void run (char* program);
          /**
           * Compiles given source code and immediately runs it.
           * @param source input source stream containing the source code.

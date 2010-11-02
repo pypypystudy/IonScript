@@ -48,13 +48,20 @@ void Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output) {
    mDeclareOnly.push(false);
    mVariableDeclarationAllowed.push(false);
 
+   output << kMagicNumber << kVersion;
+   size_t sizeIndex = output.getSize();
+   output << (size_t) 0;
+
    // Set a temporary op for registers preallocaiton
-   output << OP_REG << mnRequiredRegisters.top();
+   output << OP_REG ;
+   size_t registerCountIndex = output.getSize();
+   output << mnRequiredRegisters.top();
 
    // We're ready to go!
    compile(tree, output, -1);
 
-   output.set(1, mnRequiredRegisters.top());
+   output.set(registerCountIndex, mnRequiredRegisters.top());
+   output.set(sizeIndex, output.getSize());
 }
 
 //

@@ -65,7 +65,7 @@ namespace ion {
 
       class BytecodeReader {
       public:
-         BytecodeReader (std::vector<char>& output);
+         BytecodeReader (char* output);
          size_t getCursorPosition () const {
             return mPosition;
          }
@@ -74,8 +74,6 @@ namespace ion {
 
          bool continues () const;
          void print (std::ostream& outStream);
-
-
 
          BytecodeReader & operator>> (char& data);
          BytecodeReader & operator>> (unsigned char& data);
@@ -88,7 +86,8 @@ namespace ion {
 
       private:
          size_t mPosition;
-         std::vector<char>& mOutput;
+         size_t mSize;
+         char* mOutput;
       };
 
    }

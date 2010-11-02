@@ -36,6 +36,9 @@
 namespace ion {
    namespace script {
 
+      const static unsigned int kMagicNumber = 193687;
+      const static unsigned int kVersion = 1;
+
       class Value;
       class VirtualMachine;
       class Compiler;

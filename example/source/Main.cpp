@@ -100,13 +100,12 @@ int main (int argc, char** argv) {
          compileDuration = timer.getDuration() * 1000;
          cout << "done! (size: " << bytecode.size() << " bytes)" << endl;
 
-//         BytecodeReader r(bytecode);
-//         r.print(std::cout);
-//         vm.post("sample", "foo");
+         BytecodeReader r(&bytecode[0]);
+         r.print(std::cout);
 
          cout << ">> Executing..." << endl;
          timer.reset();
-         vm.run(bytecode);
+         vm.run(&bytecode[0]);
          execDuration = timer.getDuration() * 1000;
          cout << ">> Terminated.\n\tCompilation duration: " << compileDuration << " ms\n\tExecution duration: " << execDuration << " ms.\n";
          cout << "\n";
