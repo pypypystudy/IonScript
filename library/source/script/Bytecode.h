@@ -53,8 +53,8 @@ namespace ion {
          }
          BytecodeWriter & operator<< (char data);
          BytecodeWriter & operator<< (unsigned char data);
-         BytecodeWriter & operator<< (int data);
-         BytecodeWriter & operator<< (unsigned int data);
+         BytecodeWriter & operator<< (int32_t data);
+         BytecodeWriter & operator<< (uint32_t data);
          BytecodeWriter & operator<< (double data);
          BytecodeWriter & operator<< (OpCode data);
          BytecodeWriter & operator<< (const std::string& data);
@@ -78,8 +78,8 @@ namespace ion {
 
          BytecodeReader & operator>> (char& data);
          BytecodeReader & operator>> (unsigned char& data);
-         BytecodeReader & operator>> (int& data);
-         BytecodeReader & operator>> (unsigned int& data);
+         BytecodeReader & operator>> (int32_t& data);
+         BytecodeReader & operator>> (uint32_t& data);
          BytecodeReader & operator>> (double& data);
          BytecodeReader & operator>> (OpCode& data);
          BytecodeReader & operator>> (std::string& data);

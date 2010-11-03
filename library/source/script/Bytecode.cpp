@@ -61,7 +61,7 @@ BytecodeWriter & BytecodeWriter::operator<< (small_size_t data) {
    return *this;
 }
 
-BytecodeWriter & BytecodeWriter::operator<< (int data) {
+BytecodeWriter & BytecodeWriter::operator<< (int32_t data) {
    mOutput.push_back((char) (data >> 24));
    mOutput.push_back((char) ((data << 8) >> 24));
    mOutput.push_back((char) ((data << 16) >> 24));
@@ -70,7 +70,7 @@ BytecodeWriter & BytecodeWriter::operator<< (int data) {
    return *this;
 }
 
-BytecodeWriter & BytecodeWriter::operator<< (unsigned int data) {
+BytecodeWriter & BytecodeWriter::operator<< (uint32_t data) {
    mOutput.push_back((char) (data >> 24));
    mOutput.push_back((char) ((data << 8) >> 24));
    mOutput.push_back((char) ((data << 16) >> 24));
@@ -475,14 +475,14 @@ BytecodeReader & BytecodeReader::operator>> (small_size_t& data) {
    return *this;
 }
 
-BytecodeReader & BytecodeReader::operator>> (int& data) {
+BytecodeReader & BytecodeReader::operator>> (int32_t& data) {
    char* c = &mOutput[mPosition];
    data = (c[0] << 24) + ((c[1] & 0xFF) << 16) + ((c[2] & 0xFF) << 8) + (c[3] & 0xFF);
    mPosition += 4;
    return *this;
 }
 
-BytecodeReader & BytecodeReader::operator>> (unsigned int& data) {
+BytecodeReader & BytecodeReader::operator>> (uint32_t& data) {
    char* c = &mOutput[mPosition];
    data = (c[0] << 24) + ((c[1] & 0xFF) << 16) + ((c[2] & 0xFF) << 8) + (c[3] & 0xFF);
    mPosition += 4;
@@ -490,7 +490,6 @@ BytecodeReader & BytecodeReader::operator>> (unsigned int& data) {
 }
 
 BytecodeReader & BytecodeReader::operator>> (double& data) {
-
    union {
       double d;
       char c[sizeof (double) ];
