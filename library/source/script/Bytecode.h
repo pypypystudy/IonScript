@@ -35,6 +35,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <stdint.h>
 
 namespace ion {
 
