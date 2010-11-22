@@ -2,7 +2,7 @@
 # Credits: Massimo "Keebus" Tristano <massimo.tristano@gmail.com>
 # Licensed under GNU GPL license.
 
-TARGET_NAME := example
+TARGET_NAME := tests
 PLATFORM := WIN
 
 SOURCE_DIR := source
