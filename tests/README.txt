@@ -1,1 +1,0 @@
-For succesful execution, the "scripts" directory must be located within the same directory of the executable "example.exe".

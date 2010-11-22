@@ -1,0 +1,17 @@
+f1 = new_Foo("First", 1)
+f2 = new_Foo("Second", 3)
+
+print ("*** begin of script *** ")
+
+f1.sayHello()
+
+f1.getBoo(0).sayHello()
+f2.getBoo(2).sayHello()
+
+f2.sayHello()
+
+boo = f1.createBoo();
+boo.sayHello()
+
+print ("*** end of script *** ")
+

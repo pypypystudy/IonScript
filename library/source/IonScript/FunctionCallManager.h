@@ -116,7 +116,7 @@ namespace ion {
           * @param value Value to return.
           */
          void returnValue (const Value& value) const;
-
+						
       private:
          /**
           * Only VirtualMachine creates new FunctionCallManager when the script calls a host function.

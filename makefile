@@ -1,4 +1,4 @@
-FOLDERS = library example
+FOLDERS = library example tests
 
 all:
 	@for d in $(FOLDERS);\
