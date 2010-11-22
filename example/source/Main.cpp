@@ -28,10 +28,7 @@
 
 #include "Timer.h"
 
-#include <script/VirtualMachine.h>
-#include <script/SyntaxTree.h>
-#include <script/Bytecode.h>
-#include <script/FunctionCallManager.h>
+#include <IonScript/IonScript.h>
 
 #include <sys/types.h>
 #include <dirent.h>
