@@ -111,7 +111,7 @@ Value& VirtualMachine::get (const std::string& name) {
    else
       return it->second;
 }
- 
+
 void VirtualMachine::compile (std::istream& source, std::vector<char>& output) {
    SyntaxTree tree;
    compile(source, output, tree);
@@ -151,6 +151,11 @@ void VirtualMachine::run (char* program) {
       executeInstruction();
 
    mRunning = false;
+}
+
+void VirtualMachine::compileAndRun (const std::string& filename) {
+   ifstream source(filename.c_str());
+   compileAndRun(source);
 }
 
 void VirtualMachine::compileAndRun (std::istream& source) {

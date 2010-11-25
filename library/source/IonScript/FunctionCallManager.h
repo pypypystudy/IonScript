@@ -91,7 +91,6 @@ namespace ion {
           * @throw a RuntimeError if assertion fails.
           */
          void assertArgumentObjectType (size_t index, const std::type_info& info) const;
-
          /**
           * The called function returns nil and the execution immediately continues when the host function group returns.
           */
@@ -112,11 +111,20 @@ namespace ion {
           */
          void returnString (const std::string& value) const;
          /**
+          * The called function returns an object.
+          * @param object reference to the object to be returned.
+          * @param managed whether it should be managed or not.
+          */
+         template <typename T>
+         void returnObject (T* pObject, bool managed = false) const {
+            returnValue(Value(pObject, managed));
+         }
+         /**
           * The called function returns a certain Value and the execution immediately continues when the host function group returns.
           * @param value Value to return.
           */
          void returnValue (const Value& value) const;
-						
+
       private:
          /**
           * Only VirtualMachine creates new FunctionCallManager when the script calls a host function.

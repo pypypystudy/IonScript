@@ -50,6 +50,26 @@ namespace ion {
       };
 
       /**
+       * Convenient container to manage object that cannot implement the IManageableObject interface. This class wraps those objects
+       * and allow retrieval by getObject(). You can get the managed object from a value by calling value->getManagedObjectSafely<Type>() that
+       * will return a pointer to the object managed by this calss.
+       * @param pObject pointer to object to manage.
+       */
+      template <typename T>
+      class Managed : public IManageableObject {
+      public:
+         Managed (T* pObject) : mpObject (pObject) { }
+         virtual ~Managed () {
+            delete mpObject;
+         }
+         inline T* getObject () {
+            return mpObject;
+         }
+      private:
+         T* mpObject;
+      };
+
+      /**
        * This class represents the dynamic type script variables have. It automatically adapts to incoming types and manages memory automatically.
        */
       class Value {
@@ -236,23 +256,13 @@ namespace ion {
          inline const std::string & getString () const {
             return *reinterpret_cast<std::string*> (mObjectPointer);
          }
-         //         /**
-         //          * @return the contained  function first instruction index.
-         //          * @remark it does not check type for efficiency. Behaviour is unknown and definitely incorrect if this Value is not a TYPE_SCRIPT_FUNCTION.
-         //          */
-         //         inline index_t getFunctionStartIndex () const {
-         //            return mFunctionIndex;
-         //         }
          /**
           * @return the contained object pointer value if the requested type is correct, 0 otherwise.
           * @remark it does not check type for efficiency. Behaviour is unknown and definitely incorrect if this Value is not a TYPE_OBJECT.
           */
          template<typename T >
          T * getObject () const {
-            if (checkObjectType(typeid (T)))
-               return reinterpret_cast<T*> (mObjectPointer);
-            else
-               return 0;
+            return reinterpret_cast<T*> (mObjectPointer);
          }
          /**
           * @return the object type name string.
@@ -298,6 +308,97 @@ namespace ion {
           * @remark it does not check type for efficiency. Behaviour is unknown and definitely incorrect if this Value is not a TYPE_DICTIONARY.
           */
          Value & getDictionaryElement (const Value & key) const;
+         /**
+          * @return the contained boolean value.
+          * @remark it checks the type and if it's incorrect it throws an exception.
+          */
+         inline bool getBooleanSafely () const {
+            assertType(TYPE_BOOLEAN);
+            return mBoolean;
+         }
+         /**
+          * @return the contained number value.
+          * @remark it checks the type and if it's incorrect it throws an exception.
+          */
+         inline double getNumberSafely () const {
+            assertType(TYPE_NUMBER);
+            return mNumber;
+         }
+         /**
+          * @return the contained integer number value.
+          * @remark it checks the type and if it's incorrect it throws an exception.
+          */
+         inline int getIntegerSafely () const {
+            assertIsInteger();
+            return mNumber;
+         }
+         /**
+          * @return the contained positive integer number value.
+          * @remark it checks the type and if it's incorrect it throws an exception.
+          */
+         inline unsigned int getPositiveIntegerSafely () const {
+            assertIsPositiveInteger();
+            return mNumber;
+         }
+         /**
+          * @return the contained string value.
+          * @remark it checks the type and if it's incorrect it throws an exception.
+          */
+         inline const std::string & getStringSafely () const {
+            assertType(TYPE_STRING);
+            return *reinterpret_cast<std::string*> (mObjectPointer);
+         }
+         /**
+          * @return the contained object pointer value if the requested type is correct.
+          * @remark it checks the type and if it's incorrect it throws an exception.
+          */
+         template<typename T >
+         T * getObjectSafely () const {
+            assertType(TYPE_OBJECT);
+            if (checkObjectType(typeid (T)))
+               return reinterpret_cast<T*> (mObjectPointer);
+            else
+               throw RuntimeError("object type mismatch. Requested is " + std::string(typeid (T).name()) +
+               " while object type is " + std::string(mObjectTypeName) + ".");
+         }
+         /**
+          * @return the contained managed object pointer value if the requested type is correct.
+          * @remark the object must be managed by a Managed<> container. It checks the type and if it's incorrect it throws an exception.
+          */
+         template<typename T >
+         T * getManagedObjectSafely () const {
+            assertType(TYPE_OBJECT);
+            if (checkObjectType(typeid (Managed<T>)))
+               return reinterpret_cast<Managed<T>*> (mObjectPointer)->getObject();
+            else
+               throw RuntimeError("object type mismatch. Requested is " + std::string(typeid (Managed<T>).name()) +
+               " while object type is " + std::string(mObjectTypeName) + ".");
+         }
+         /**
+          * @return the contained list value.
+          * @remark it checks the type and if it's incorrect it throws an exception.
+          */
+         inline List & getListSafely () const {
+            assertType(TYPE_LIST);
+            return *reinterpret_cast<List*> (mObjectPointer);
+         }
+         /**
+          * @return the contained list value element at specified index.
+          * @param index index of the element.
+          * @remark it checks the type and if it's incorrect it throws an exception.
+          */
+         inline Value & getListElementSafely (size_t index) const {
+            assertType(TYPE_LIST);
+            return reinterpret_cast<List*> (mObjectPointer)->at(index);
+         }
+         /**
+          * @return the contained dictionary value.
+          * @remark it checks the type and if it's incorrect it throws an exception.
+          */
+         inline Dictionary & getDictionarySafely () const {
+            assertType(TYPE_DICTIONARY);
+            return *reinterpret_cast<Dictionary*> (mObjectPointer);
+         }
 
          /**
           * Sets this value as nil.

@@ -132,6 +132,11 @@ namespace ion {
           * Compiles given source code and immediately runs it.
           * @param source input source stream containing the source code.
           */
+         void compileAndRun (const std::string& filename);
+         /**
+          * Compiles given source code and immediately runs it.
+          * @param source input source stream containing the source code.
+          */
          void compileAndRun (std::istream& source);
          /**
           * Calls given script functions with given arguments.
