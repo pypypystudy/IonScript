@@ -51,6 +51,15 @@ namespace ion {
          friend class FunctionCallManager;
 
       public:
+
+         enum State {
+            STATE_FINISHED,
+            STATE_RUNNING,
+            STATE_WAITING_FOR_RETURN,
+            STATE_PAUSED,
+         };
+
+      public:
          /**
           * Constructs a new Virtual Machine.
           */
@@ -59,6 +68,12 @@ namespace ion {
           * Deconstructor.
           */
          virtual ~VirtualMachine ();
+         /**
+          * @return the actual VirtualMachine state.
+          */
+         State getState () const {
+            return mState;
+         }
          /**
           * Makes your host function a function group which new callable script functions can be associated to.
           * @param function your host function that will handle desired function calls.
@@ -78,6 +93,13 @@ namespace ion {
           * @remark If maxArgumentsCount is lesser than minArgumentsCount and not equal to -1 it is set equal to minArgumentsCount.
           */
          void setFunction (const std::string& functionName, HostFunctionGroupID hostFunctionGroupID, FunctionID functionID, int minArgumentsCount = 0, int maxArgumentsCount = -2);
+         /**
+          * Gets a global variable value.
+          * @param name the global variable name.
+          * @return the global variable value if found.
+          * @throw ItemNotFoundException<std::string>
+          */
+         Value& get (const std::string& name);
          /**
           * Sets a global variable by a new value.
           * @param name the global variable name.
@@ -103,13 +125,7 @@ namespace ion {
           * @param name the global variable name.
           */
          void undefineVariable (const std::string& name);
-         /**
-          * Gets a global variable value.
-          * @param name the global variable name.
-          * @return the global variable value if found.
-          * @throw ItemNotFoundException<std::string>
-          */
-         Value& get (const std::string& name);
+
          /**
           * Compiles input source code into executable bytecode.
           * @param source input source stream containing the source code.
@@ -139,6 +155,10 @@ namespace ion {
           */
          void compileAndRun (std::istream& source);
          /**
+          * If the VM is in pause state, this method makes it running again.
+          */
+         void goOn();
+         /**
           * Calls given script functions with given arguments.
           * @remark The VM must already have loaded the bytecode.
           */
@@ -160,6 +180,8 @@ namespace ion {
          void dump (std::ostream& output = std::cout);
 
       private:
+         /** Actual VM state. */
+         State mState;
          /** List of registered host function groups. */
          std::vector<HostFunction> mHostFunctionGroups;
          /** Map of registered host-script functions. */
@@ -182,8 +204,6 @@ namespace ion {
          };
          /** Stack of all the activation frames */
          std::list<ActivationRecord> mActivations;
-         /** Is the VM running? */
-         bool mRunning;
          /** The number of arguments of the just called host function. NOTE: the VM always calls one HF at a time so there's no possibility for nested HF calls. */
          size_t mHostFunctionArgumentsCount;
          /**

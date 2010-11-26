@@ -145,12 +145,14 @@ void VirtualMachine::run (char* program) {
    mActivations.clear();
    mActivations.push_back(ActivationRecord());
 
-   mRunning = true;
+   mState = STATE_RUNNING;
 
-   while (mpProgram->continues() && mRunning)
+   while (mpProgram->continues() && mState == STATE_RUNNING)
       executeInstruction();
 
-   mRunning = false;
+   // The loop exited because we executed the whole program
+   if (mState == STATE_RUNNING)
+      mState = STATE_FINISHED;
 }
 
 void VirtualMachine::compileAndRun (const std::string& filename) {
@@ -163,6 +165,20 @@ void VirtualMachine::compileAndRun (std::istream& source) {
    SyntaxTree tree;
    compile(source, bytecode, tree);
    run(&bytecode[0]);
+}
+
+void VirtualMachine::goOn () {
+   if (mState != STATE_PAUSED)
+      return;
+
+   mState = STATE_RUNNING;
+
+   while (mpProgram->continues() && mState == STATE_RUNNING)
+      executeInstruction();
+
+   // The loop exited because we executed the whole program
+   if (mState == STATE_RUNNING)
+      mState = STATE_FINISHED;
 }
 
 Value VirtualMachine::callScriptFunction (const Value& function, const Value& argument) {
@@ -303,14 +319,19 @@ void VirtualMachine::executeInstruction () {
 
          FunctionCallManager manager(*this, fID, &mValues[mValues.size() - nArguments], nArguments);
 
-         // Pause the machine
-         mRunning = false;
-
          // Set the number of arguments
          mHostFunctionArgumentsCount = nArguments;
 
+         // Pause the machine
+         mState = STATE_WAITING_FOR_RETURN;
+
          // Call the host function group.
          mHostFunctionGroups[hfgID](manager);
+
+         // If the state is PAUSED it means that the function already returned a value so we can continue
+         if (mState == STATE_PAUSED)
+            mState = STATE_RUNNING;
+
          break;
       }
 
@@ -658,10 +679,14 @@ void VirtualMachine::error (const std::string & message) const {
 }
 
 void VirtualMachine::returnValue (const Value & value) {
+   if (mState != STATE_WAITING_FOR_RETURN)
+      throw RuntimeError("cannot return a value if a host function has not been called.");
+
    for (size_t i = 0; i < mHostFunctionArgumentsCount; i++)
       mValues.pop_back();
    mValues.push_back(value);
-   mRunning = true;
+
+   mState = STATE_PAUSED;
 }
 
 void VirtualMachine::builtinsGroup (const FunctionCallManager & manager) {
