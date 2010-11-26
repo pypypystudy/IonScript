@@ -155,6 +155,10 @@ namespace ion {
           */
          void compileAndRun (std::istream& source);
          /**
+          * Pauses the execution of the current script. You can continue execution at any time later by calling goOn().
+          */
+         void pause();
+         /**
           * If the VM is in pause state, this method makes it running again.
           */
          void goOn();

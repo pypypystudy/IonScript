@@ -127,7 +127,6 @@ void VirtualMachine::compile (std::istream& source, std::vector<char>& output, S
 
 void VirtualMachine::run (char* program) {
    delete mpProgram;
-
    mpProgram = new BytecodeReader(program);
 
    unsigned int magicNumber, version;
@@ -165,6 +164,11 @@ void VirtualMachine::compileAndRun (std::istream& source) {
    SyntaxTree tree;
    compile(source, bytecode, tree);
    run(&bytecode[0]);
+}
+
+void VirtualMachine::pause () {
+   if (mState == STATE_RUNNING)
+      mState = STATE_PAUSED;
 }
 
 void VirtualMachine::goOn () {
