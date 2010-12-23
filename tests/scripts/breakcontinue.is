@@ -1,8 +1,8 @@
 print ("FOR LOOP")
 for i = 0; i < 4; i+=1
-	if i == 2: continue end
+	if i == 2: continue
 	for j = 0; j < 5; j += 1
-		if j == 3: break end
+		if j == 3: break
 		print(i, j)
 	end
 end
@@ -13,9 +13,8 @@ while true
 	if i == 4
 		i -= 1
 		continue
-	else if i == 1
-		break
-	end
+	else if i == 1: break
+
 	print (i)
 	i -= 1
 end

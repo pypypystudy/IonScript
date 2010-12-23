@@ -37,9 +37,10 @@
 using namespace std;
 using namespace ion::script;
 
-Compiler::Compiler (const HostFunctionsMap& hostFunctionsMap) : mHostFunctionsMap (hostFunctionsMap) { }
+Compiler::Compiler(const HostFunctionsMap& hostFunctionsMap) : mHostFunctionsMap(hostFunctionsMap) {
+}
 
-void Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output) {
+void Compiler::compile(const SyntaxTree& tree, BytecodeWriter& output) {
    mNamesStack.clear();
    mScriptFunctionsLocations.clear();
 
@@ -53,7 +54,7 @@ void Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output) {
    output << (size_t) 0;
 
    // Set a temporary op for registers preallocaiton
-   output << OP_REG ;
+   output << OP_REG;
    size_t registerCountIndex = output.getSize();
    output << mnRequiredRegisters.top();
 
@@ -66,7 +67,7 @@ void Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output) {
 
 //
 
-int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_t target) {
+int Compiler::compile(const SyntaxTree& tree, BytecodeWriter& output, location_t target) {
 
    switch (tree.type) {
       case SyntaxTree::TYPE_BLOCK:
@@ -374,7 +375,7 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
                   }
 
                } else
-                  error(tree.sourceLineNumber, "Could not found function \"" + tree.str + "\".");
+                  error(tree.sourceLineNumber, "Could not find function \"" + tree.str + "\"");
             } else
                loc = sfit->second;
          }
@@ -657,11 +658,11 @@ int Compiler::compile (const SyntaxTree& tree, BytecodeWriter& output, location_
    return target;
 }
 
-void Compiler::error (size_t line, const std::string & error) const {
+void Compiler::error(size_t line, const std::string & error) const {
    throw SemanticError(line, error);
 }
 
-void Compiler::compileExpressionNodeChildren (const SyntaxTree& node, BytecodeWriter& output, location_t target, OpCode op) {
+void Compiler::compileExpressionNodeChildren(const SyntaxTree& node, BytecodeWriter& output, location_t target, OpCode op) {
    location_t reg, left, right;
 
    reg = (target < 0) ? target : -1;
@@ -684,7 +685,7 @@ void Compiler::compileExpressionNodeChildren (const SyntaxTree& node, BytecodeWr
       output << op << target << left << right;
 }
 
-bool Compiler::findLocalName (const std::string& name, location_t & outLocation) const {
+bool Compiler::findLocalName(const std::string& name, location_t & outLocation) const {
    size_t start = mActivationFramePointer.top();
    for (size_t i = start; i < mNamesStack.size(); ++i)
       if (mNamesStack[i] == name) {
@@ -694,12 +695,16 @@ bool Compiler::findLocalName (const std::string& name, location_t & outLocation)
    return false;
 }
 
-void Compiler::deleteValues (size_t desiredStackSize, BytecodeWriter& output, bool deleteNames) {
+void Compiler::deleteValues(size_t desiredStackSize, BytecodeWriter& output, bool deleteNames) {
    size_t count = mNamesStack.size() - desiredStackSize;
 
    if (deleteNames)
-      for (size_t i = 0; i < count; ++i)
+      for (size_t i = 0; i < count; ++i) {
+         map<string, location_t>::iterator it = mScriptFunctionsLocations.find(mNamesStack.back());
+         if (it != mScriptFunctionsLocations.end())
+            mScriptFunctionsLocations.erase(it);
          mNamesStack.pop_back();
+      }
 
    while (count > 0) {
       if (count == 1) {
@@ -713,7 +718,7 @@ void Compiler::deleteValues (size_t desiredStackSize, BytecodeWriter& output, bo
    }
 }
 
-void Compiler::checkComparisonConsistency (const SyntaxTree& tree) const {
+void Compiler::checkComparisonConsistency(const SyntaxTree& tree) const {
    if (tree.left()->type == SyntaxTree::TYPE_NIL ||
       tree.right()->type == SyntaxTree::TYPE_NIL)
       error(tree.sourceLineNumber, "cannot compare disequality of a nil value.");

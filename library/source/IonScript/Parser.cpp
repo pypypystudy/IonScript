@@ -36,9 +36,10 @@ using namespace ion::script;
 
 //
 
-Parser::Parser (std::istream& source) : mLexer (source) { }
+Parser::Parser(std::istream& source) : mLexer(source) {
+}
 
-void Parser::parse (SyntaxTree& tree) {
+void Parser::parse(SyntaxTree& tree) {
    mTokenType = mLexer.nextToken();
    block(tree, false);
 
@@ -48,7 +49,7 @@ void Parser::parse (SyntaxTree& tree) {
 
 //
 
-void Parser::error () const {
+void Parser::error() const {
    std::string whatIsUnexpected;
    if (mTokenType == Lexer::T_EOS)
       whatIsUnexpected = "end of stream";
@@ -59,14 +60,14 @@ void Parser::error () const {
    throw SyntaxError(mLexer.getLine(), whatIsUnexpected);
 }
 
-void Parser::expect (Lexer::TokenType token) {
+void Parser::expect(Lexer::TokenType token) {
    if (mTokenType != token)
       error();
    else
       nextToken();
 }
 
-bool Parser::accept (Lexer::TokenType token) {
+bool Parser::accept(Lexer::TokenType token) {
    if (mTokenType == token) {
       nextToken();
       return true;
@@ -74,14 +75,14 @@ bool Parser::accept (Lexer::TokenType token) {
       return false;
 }
 
-void Parser::endOfStatement () {
+void Parser::endOfStatement() {
    if (!accept(Lexer::T_NEWLINE))
       if (!accept(Lexer::T_SEMICOLON))
          expect(Lexer::T_EOS);
 }
 //
 
-void Parser::block (SyntaxTree& tree, int state) {
+void Parser::block(SyntaxTree& tree, int state) {
    tree.type = SyntaxTree::TYPE_BLOCK;
    while (true) {
       while (mTokenType == Lexer::T_NEWLINE || mTokenType == Lexer::T_SEMICOLON)
@@ -92,7 +93,7 @@ void Parser::block (SyntaxTree& tree, int state) {
    }
 }
 
-void Parser::statement (SyntaxTree& tree, int state) {
+void Parser::statement(SyntaxTree& tree, int state) {
    tree.sourceLineNumber = mLexer.getLine();
    switch (mTokenType) {
       case Lexer::T_IF:
@@ -144,7 +145,7 @@ void Parser::statement (SyntaxTree& tree, int state) {
    tree.simplify();
 }
 
-void Parser::functionDefinition (SyntaxTree& tree) {
+void Parser::functionDefinition(SyntaxTree& tree) {
    expect(Lexer::T_DEF);
    tree.type = SyntaxTree::TYPE_FUNCTION_DEF;
    tree.str = mLexer.getString();
@@ -164,57 +165,77 @@ void Parser::functionDefinition (SyntaxTree& tree) {
          } while (!accept(Lexer::T_RIGHT_ROUND_BRACKET));
    }
 
-   block(*tree.createChild(), STATE_INSIDE_FUNCTION);
-   expect(Lexer::T_END);
-   endOfStatement();
+   if (accept(Lexer::T_NEWLINE)) {
+      block(*tree.createChild(), STATE_INSIDE_FUNCTION);
+      expect(Lexer::T_END);
+      //endOfStatement();
+   } else {
+      expect(Lexer::T_COLON);
+      SyntaxTree* blockTree = tree.createChild();
+      blockTree->type = SyntaxTree::TYPE_BLOCK;
+      statement(*blockTree->createChild(), STATE_INSIDE_FUNCTION);
+   }
 }
 
-void Parser::ifblock (SyntaxTree& tree, int state) {
+void Parser::ifblock(SyntaxTree& tree, int state) {
    expect(Lexer::T_IF);
    tree.type = SyntaxTree::TYPE_IF;
    expression(*tree.createChild());
 
-   if (!accept(Lexer::T_NEWLINE))
+   if (accept(Lexer::T_NEWLINE)) {
+      block(*tree.createChild(), state);
+
+      if (!accept(Lexer::T_END)) {
+         if (mTokenType == Lexer::T_ELSE)
+            elseblock(*tree.createChild(), state);
+         else
+            error();
+      }
+   } else {
       expect(Lexer::T_COLON);
-
-   block(*tree.createChild(), state);
-
-   if (!accept(Lexer::T_END)) {
+      SyntaxTree* blockTree = tree.createChild();
+      blockTree->type = SyntaxTree::TYPE_BLOCK;
+      statement(*blockTree->createChild(), state);
       if (mTokenType == Lexer::T_ELSE)
          elseblock(*tree.createChild(), state);
-      else
-         error();
    }
 }
 
-void Parser::elseblock (SyntaxTree& tree, int state) {
+void Parser::elseblock(SyntaxTree& tree, int state) {
    expect(Lexer::T_ELSE);
    if (mTokenType == Lexer::T_IF)
       ifblock(tree, state); //else if
    else {
 
-      if (!accept(Lexer::T_NEWLINE))
+      if (accept(Lexer::T_NEWLINE)) {
+         block(tree, state); // else
+         expect(Lexer::T_END);
+      } else {
          expect(Lexer::T_COLON);
-
-      block(tree, state); // else
-      expect(Lexer::T_END);
+         SyntaxTree* blockTree = tree.createChild();
+         blockTree->type = SyntaxTree::TYPE_BLOCK;
+         statement(*blockTree->createChild(), state);
+      }
    }
 }
 
-void Parser::whileblock (SyntaxTree& tree, int state) {
+void Parser::whileblock(SyntaxTree& tree, int state) {
    expect(Lexer::T_WHILE);
    tree.type = SyntaxTree::TYPE_WHILE;
    expression(*tree.createChild());
 
-   if (!accept(Lexer::T_NEWLINE))
+   if (accept(Lexer::T_NEWLINE)) {
+      block(*tree.createChild(), state | STATE_INSIDE_LOOP);
+      expect(Lexer::T_END);
+   } else {
       expect(Lexer::T_COLON);
-
-   block(*tree.createChild(), state | STATE_INSIDE_LOOP);
-
-   expect(Lexer::T_END);
+      SyntaxTree* blockTree = tree.createChild();
+      blockTree->type = SyntaxTree::TYPE_BLOCK;
+      statement(*blockTree->createChild(), state);
+   }
 }
 
-void Parser::forblock (SyntaxTree& tree, int state) {
+void Parser::forblock(SyntaxTree& tree, int state) {
    expect(Lexer::T_FOR);
    tree.type = SyntaxTree::TYPE_FOR;
 
@@ -228,15 +249,18 @@ void Parser::forblock (SyntaxTree& tree, int state) {
 
    expression(*tree.createChild());
 
-   if (!accept(Lexer::T_NEWLINE))
+   if (accept(Lexer::T_NEWLINE)) {
+      block(*tree.createChild(), state | STATE_INSIDE_LOOP);
+      expect(Lexer::T_END);
+   } else {
       expect(Lexer::T_COLON);
-
-   block(*tree.createChild(), state | STATE_INSIDE_LOOP);
-
-   expect(Lexer::T_END);
+      SyntaxTree* blockTree = tree.createChild();
+      blockTree->type = SyntaxTree::TYPE_BLOCK;
+      statement(*blockTree->createChild(), state);
+   }
 }
 
-void Parser::expression (SyntaxTree& tree) {
+void Parser::expression(SyntaxTree& tree) {
    andExpression(tree);
    while (true) {
       switch (mTokenType) {
@@ -303,7 +327,7 @@ void Parser::expression (SyntaxTree& tree) {
    }
 }
 
-void Parser::andExpression (SyntaxTree& tree) {
+void Parser::andExpression(SyntaxTree& tree) {
    orExpression(tree);
    while (true) {
       if (mTokenType == Lexer::T_AND) {
@@ -316,7 +340,7 @@ void Parser::andExpression (SyntaxTree& tree) {
    }
 }
 
-void Parser::orExpression (SyntaxTree& tree) {
+void Parser::orExpression(SyntaxTree& tree) {
    comparisonExpression(tree);
    while (true) {
       if (mTokenType == Lexer::T_OR) {
@@ -329,7 +353,7 @@ void Parser::orExpression (SyntaxTree& tree) {
    }
 }
 
-void Parser::comparisonExpression (SyntaxTree& tree) {
+void Parser::comparisonExpression(SyntaxTree& tree) {
    mathExpression(tree);
    while (true) {
       switch (mTokenType) {
@@ -375,7 +399,7 @@ void Parser::comparisonExpression (SyntaxTree& tree) {
    }
 }
 
-void Parser::mathExpression (SyntaxTree& tree) {
+void Parser::mathExpression(SyntaxTree& tree) {
    term(tree);
    while (true)
       switch (mTokenType) {
@@ -396,7 +420,7 @@ void Parser::mathExpression (SyntaxTree& tree) {
       }
 }
 
-void Parser::term (SyntaxTree& tree) {
+void Parser::term(SyntaxTree& tree) {
    implicitFunctionCall(tree);
    while (true)
       switch (mTokenType) {
@@ -417,7 +441,7 @@ void Parser::term (SyntaxTree& tree) {
       }
 }
 
-void Parser::implicitFunctionCall (SyntaxTree& tree) {
+void Parser::implicitFunctionCall(SyntaxTree& tree) {
    dereference(tree);
    while (accept(Lexer::T_DOT)) {
       if (!mTokenType == Lexer::T_IDENTIFIER) // It may be improved adding arrays.
@@ -432,7 +456,7 @@ void Parser::implicitFunctionCall (SyntaxTree& tree) {
    }
 }
 
-void Parser::dereference (SyntaxTree& tree) {
+void Parser::dereference(SyntaxTree& tree) {
    factor(tree);
    while (accept(Lexer::T_LEFT_SQUARE_BRACKET)) {
 
@@ -444,7 +468,7 @@ void Parser::dereference (SyntaxTree& tree) {
    }
 }
 
-void Parser::factor (SyntaxTree& tree) {
+void Parser::factor(SyntaxTree& tree) {
    switch (mTokenType) {
       case Lexer::T_NIL:
          tree.type = SyntaxTree::TYPE_NIL;
@@ -559,7 +583,7 @@ void Parser::factor (SyntaxTree& tree) {
    }
 }
 
-void Parser::params (SyntaxTree& tree) {
+void Parser::params(SyntaxTree& tree) {
    if (mTokenType == Lexer::T_RIGHT_ROUND_BRACKET)
       return;
    expression(*tree.createChild());

@@ -115,3 +115,8 @@ polish:
 package: all
 	@echo ">> Making package..."
 	-tar czf lib$(TARGET_NAME)-$(VERSION).tar.gz $(BIN_DIR) $(INCLUDE_DIR) README
+
+install: all
+	@echo ">> Installing..."
+	cp ./$(INCLUDE_DIR)/* /usr/include/ -r
+	cp $(TARGET) $(TARGET_D) /usr/lib
