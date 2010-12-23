@@ -3,15 +3,11 @@
 # Licensed under GNU GPL license.
 
 TARGET_NAME := IonScript
-PLATFORM := WIN
 
 SOURCE_DIR := source
 BIN_DIR := bin
 BUILD_DIR := build
 INCLUDE_DIR := include
-
-INCLUDES_WIN :=
-INCLUDES_LINUX :=
 
 #Release Configuration. Simply type "make" to compile with this configuration.
 CFLAGS := -O3 -Wall
@@ -24,29 +20,23 @@ CC = g++
 
 INCLUDES := -I$(SOURCE_DIR)
 
-ifeq ($(PLATFORM), WIN)
-	INCLUDES += $(INCLUDES_WIN)
-else ifeq ($(PLATFORM), LINUX)
-	INCLUDES += $(INCLUDES_LINUX)
-endif
-
-TARGET:= $(BIN_DIR)/$(PLATFORM)/lib$(TARGET_NAME).a
-TARGET_D := $(BIN_DIR)/$(PLATFORM)/lib$(TARGET_NAME)_d.a
+TARGET:= $(BIN_DIR)/lib$(TARGET_NAME).a
+TARGET_D := $(BIN_DIR)/lib$(TARGET_NAME)_d.a
 
 SRC := $(shell find ./$(SOURCE_DIR)/ -name "*.cpp" -print)
-OBJS := $(SRC:./$(SOURCE_DIR)/%.cpp=./$(BUILD_DIR)/$(PLATFORM)/release/%.o)
-OBJS_D := $(SRC:./$(SOURCE_DIR)/%.cpp=./$(BUILD_DIR)/$(PLATFORM)/debug/%.o)
+OBJS := $(SRC:./$(SOURCE_DIR)/%.cpp=./$(BUILD_DIR)/release/%.o)
+OBJS_D := $(SRC:./$(SOURCE_DIR)/%.cpp=./$(BUILD_DIR)/debug/%.o)
 
 SRCDIR := $(shell find ./$(SOURCE_DIR) -type d -exec ls -d {} \;)
-DIR :=$(SRCDIR:./$(SOURCE_DIR)%=./$(BUILD_DIR)/$(PLATFORM)/release%)
-DIR_D := $(SRCDIR:./$(SOURCE_DIR)%=./$(BUILD_DIR)/$(PLATFORM)/debug%)
+DIR :=$(SRCDIR:./$(SOURCE_DIR)%=./$(BUILD_DIR)/release%)
+DIR_D := $(SRCDIR:./$(SOURCE_DIR)%=./$(BUILD_DIR)/debug%)
 
 SRCHEADERS := $(shell find ./$(SOURCE_DIR)/ -name "*.h" -print)
 HEADERS := $(SRCHEADERS:./$(SOURCE_DIR)/%=./$(INCLUDE_DIR)/%)
 HEADERS_DIR := $(SRCDIR:./$(SOURCE_DIR)%=./$(INCLUDE_DIR)%)
 
-CFLAGS += -D$(PLATFORM)
-CFLAGS_D += -D$(PLATFORM) -DDEBUG
+CFLAGS +=
+CFLAGS_D += -DDEBUG
 
 ###########ALL##############
 all: release debug headers
@@ -59,13 +49,13 @@ release-info:
 	@echo ">> Building $(TARGET) with the release configuration..."
 
 directories:
-	@mkdir -p $(DIR) $(BIN_DIR)/$(PLATFORM) $(BUILD_DIR)/$(PLATFORM)
+	@mkdir -p $(DIR) $(BIN_DIR)/$(PLATFORM) $(BUILD_DIR)
 
 $(TARGET) : $(OBJS)
 	@echo ">> Making release static library..."
 	@ar rcs $(TARGET) $(OBJS)
 
-$(OBJS): ./$(BUILD_DIR)/$(PLATFORM)/release/%.o : ./$(SOURCE_DIR)/%.cpp
+$(OBJS): ./$(BUILD_DIR)/release/%.o : ./$(SOURCE_DIR)/%.cpp
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 ##########DEBUG############
@@ -76,13 +66,13 @@ debug-info:
 	@echo ">> Building $(TARGET_NAME) with the debug configuration..."
 
 directories_d:
-	@mkdir -p $(DIR_D) $(BIN_DIR)/$(PLATFORM) $(BUILD_DIR)/$(PLATFORM)
+	@mkdir -p $(DIR_D) $(BIN_DIR) $(BUILD_DIR)
 
 $(TARGET_D) : $(OBJS_D)
 	@echo ">> Making static static library..."
 	@ar rcs $(TARGET_D) $(OBJS_D)
 
-$(OBJS_D): ./$(BUILD_DIR)/$(PLATFORM)/debug/%.o : ./$(SOURCE_DIR)/%.cpp
+$(OBJS_D): ./$(BUILD_DIR)/debug/%.o : ./$(SOURCE_DIR)/%.cpp
 	$(CC) $(CFLAGS_D) $(INCLUDES) -c $< -o $@
 
 ##########HEADERS##########
@@ -102,13 +92,13 @@ $(HEADERS): ./$(INCLUDE_DIR)/% : ./$(SOURCE_DIR)/%
 ##########EXTRA###########
 clean:
 	@echo ">> Cleaning..."
-	-rm -rf $(BIN_DIR)/$(PLATFORM) $(BUILD_DIR)/$(PLATFORM) $(INCLUDE_DIR)
+	-rm -rf $(BIN_DIR) $(BUILD_DIR) $(INCLUDE_DIR)
 	-rmdir $(BIN_DIR) $(BUILD_DIR)
 	@echo ">> Done :)"
 
 polish:
 	@echo ">> Polishing..."
-	-rm -rf $(BUILD_DIR)/$(PLATFORM)
+	-rm -rf $(BUILD_DIR)
 	-rmdir $(BUILD_DIR)
 	@echo ">> Done :)"
 

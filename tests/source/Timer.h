@@ -29,10 +29,10 @@
 #ifndef ION_SCRIPT_TIMER_H
 #define	ION_SCRIPT_TIMER_H
 
-#ifdef WIN
+#ifdef WIN32
 #include <windows.h>
 #else
-#ifdef LINUX
+#ifdef __linux__
 #include <sys/time.h>
 #else
 #error "Timer in this platform is not implemented yet."
@@ -46,7 +46,7 @@
       class Timer {
       public:
          Timer () {
-#ifdef WIN
+#ifdef WIN32
             QueryPerformanceFrequency(&mFreq);
             reset();
 #endif
@@ -55,12 +55,12 @@
          virtual ~Timer () { }
          
          double getDuration () const {
-#ifdef WIN
+#ifdef WIN32
             LARGE_INTEGER now;
             QueryPerformanceCounter(&now);
             return (double) (now.QuadPart - mStartTime.QuadPart) / mFreq.QuadPart;
 #endif
-#ifdef LINUX
+#ifdef __linux__
 				struct timeval now;
 				gettimeofday(&now,0);
 				return (double)(now.tv_sec - mStartTime.tv_sec) + (double)(now.tv_usec - mStartTime.tv_usec) / 1000000.0;
@@ -68,20 +68,20 @@
          }
          
          void reset () {
-         	#ifdef WIN
+         	#ifdef WIN32
             QueryPerformanceCounter(&mStartTime);
             #endif
-            #ifdef LINUX
+            #ifdef __linux__
             gettimeofday(&mStartTime, 0);
             #endif
          }
 
       private:
-#ifdef WIN
+#ifdef WIN32
          LARGE_INTEGER mFreq;
          LARGE_INTEGER mStartTime;
 #endif
-#ifdef LINUX
+#ifdef __linux__
 			struct timeval mStartTime;
 #endif
       };
