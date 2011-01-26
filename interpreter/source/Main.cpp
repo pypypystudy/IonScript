@@ -25,7 +25,7 @@
  *   You should have received a copy of the GNU General Public License     *
  *   along with this program; if not, see <http://www.gnu.org/licenses/>   *
  ***************************************************************************/
- 
+
 #include <IonScript/IonScript.h>
 #include <fstream>
 #include <iostream>
@@ -35,18 +35,35 @@ using namespace std;
 using namespace ion::script;
 
 int main(int argc, char** argv) {
-	for (int i = 1; i < argc; i++) {
-		if (argv[i][0] != '-') {
-			try {
-					ifstream ifs(argv[i]);
-		
-					VirtualMachine vm;
-		
-					vm.compileAndRun(ifs);
-		
-			} catch (std::exception &e) {
-					std::cerr << e.what() << "\n";
-			}
-		}
-	}
+    bool opTree = false;
+    string filename = "";
+
+    for (int i = 1; i < argc; i++) {
+        if (argv[i][0] == '-') {
+            switch (argv[i][1]) {
+                case 't': // Print the tree 
+                    opTree = true;
+                    break;
+            }
+        } else
+            filename = string(argv[i]);
+    }
+    
+    try { 
+        SyntaxTree tree;
+        vector<char> bytecode;
+        ifstream ifs(filename.c_str());
+
+        VirtualMachine vm;
+
+        vm.compile(ifs, bytecode, tree);
+
+        if (opTree)
+            tree.dump(std::cout);
+
+        vm.run(&bytecode[0]);
+
+    } catch (std::exception &e) {
+        std::cerr << e.what() << "\n";
+    }
 }
