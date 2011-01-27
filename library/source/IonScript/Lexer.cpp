@@ -399,869 +399,897 @@ Lexer::TokenType Lexer::nextToken () {
                mText += c;
                state = 4;
             }// Identifier "i"
-            else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
+                else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
 
-         case 6: // if
-            if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else { // IF
-               mSource.unget();
-               return T_IF;
-            }
-            break;
+            case 6: // if
+                if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else { // IF
+                    mSource.unget();
+                    return T_IF;
+                }
+                break;
 
-         case 7: // in
-            if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IN;
-            }
-            break;
+            case 7: // in
+                if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IN;
+                }
+                break;
 
-            /*********************************************************************************************************/
-            /* ELSE / END
-             */
-         case 8: // e
-            if (c == 'l') {
-               mText += c;
-               state = 9;
-            } else if (c == 'n') {
-               mText += c;
-               state = 12;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
+                /*********************************************************************************************************/
+                /* ELSE / END
+                 */
+            case 8: // e
+                if (c == 'l') {
+                    mText += c;
+                    state = 9;
+                } else if (c == 'n') {
+                    mText += c;
+                    state = 12;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
 
-         case 9: // el
-            if (c == 's') {
-               mText += c;
-               state = 10;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
+            case 9: // el
+                if (c == 's') {
+                    mText += c;
+                    state = 10;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
 
-         case 10: // els
-            if (c == 'e') {
-               mText += c;
-               state = 11;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
+            case 10: // els
+                if (c == 'e') {
+                    mText += c;
+                    state = 11;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
 
-         case 11: // else
-            if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_ELSE;
-            }
-            break;
+            case 11: // else
+                if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_ELSE;
+                }
+                break;
 
-         case 12: // en
-            if (c == 'd') {
-               mText += c;
-               state = 13;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
+            case 12: // en
+                if (c == 'd') {
+                    mText += c;
+                    state = 13;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
 
-         case 13: // end
-            if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_END;
-            }
-            break;
+            case 13: // end
+                if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_END;
+                }
+                break;
 
-            /*********************************************************************************************************/
-            /* NOT / NIL
-             */
-         case 14:
-            if (c == 'o') {
-               mText += 'o';
-               state = 15;
-            } else if (c == 'i') {
-               mText += 'i';
-               state = 56;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
+                /*********************************************************************************************************/
+                /* NOT / NIL
+                 */
+            case 14:
+                if (c == 'o') {
+                    mText += 'o';
+                    state = 15;
+                } else if (c == 'i') {
+                    mText += 'i';
+                    state = 56;
+                } else if (c == 'e') {
+                    mText += 'e';
+                    state = 127;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
 
-         case 15:
-            if (c == 't') {
-               mText += 't';
-               state = 16;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
+            case 15:
+                if (c == 't') {
+                    mText += 't';
+                    state = 16;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
 
-         case 16:
-            if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_NOT;
-            }
-            break;
-
-
-            /*********************************************************************************************************/
-            /* AND
-             */
-         case 17: // a
-            if (c == 'n') {
-               mText += 'n';
-               state = 18;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-
-         case 18: // an
-            if (c == 'd') {
-               mText += 'd';
-               state = 19;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-
-         case 19: // and
-            if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_AND;
-            }
-            break;
-
-            /*********************************************************************************************************/
-            /* OR
-             */
-         case 20: // o
-            if (c == 'r') {
-               mText += 'r';
-               state = 21;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-
-         case 21: // or
-            if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_OR;
-            }
-            break;
-
-            /*********************************************************************************************************/
-            /* TRUE
-             */
-         case 22: // t
-            if (c == 'r') {
-               mText += 'r';
-               state = 23;
-            } else if (c == 'o') {
-               mText += 'o';
-               state = 59;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-
-         case 23: // tr
-            if (c == 'u') {
-               mText += 'u';
-               state = 24;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-
-         case 24: // tru
-            if (c == 'e') {
-               mText += 'e';
-               state = 25;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-
-         case 25: // true
-            if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_TRUE;
-            }
-            break;
-
-            /*********************************************************************************************************/
-            /* FOR/FALSE
-             */
-         case 26: // f
-            if (c == 'a') {
-               mText += 'a';
-               state = 27;
-            } else if (c == 'o') {
-               mText += 'o';
-               state = 31;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-
-         case 27: // fa
-            if (c == 'l') {
-               mText += 'l';
-               state = 28;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-
-         case 28: // fal
-            if (c == 's') {
-               mText += 's';
-               state = 29;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-
-         case 29: // fals
-            if (c == 'e') {
-               mText += 'e';
-               state = 30;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-
-         case 30: // false
-            if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_FALSE;
-            }
-            break;
-
-         case 31: // fo
-            if (c == 'r') {
-               mText += 'r';
-               state = 32;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-
-         case 32: // for
-            if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_FOR;
-            }
-            break;
-
-            /*********************************************************************************************************/
-            /* DEF
-             */
-         case 33: //d
-            if (c == 'e') {
-               mText += 'e';
-               state = 34;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-         case 34: //de
-            if (c == 'f') {
-               mText += 'f';
-               state = 35;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-         case 35:
-            if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_DEF;
-            }
-            break;
-            /*********************************************************************************************************/
-            /* WHILE
-             */
-         case 36: //w
-            if (c == 'h') {
-               mText += 'h';
-               state = 37;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-         case 37: //wh
-            if (c == 'i') {
-               mText += 'i';
-               state = 38;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-         case 38: //whi
-            if (c == 'l') {
-               mText += 'l';
-               state = 39;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-         case 39: //whil
-            if (c == 'e') {
-               mText += 'e';
-               state = 40;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-         case 40: //while
-            if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_WHILE;
-            }
-            break;
-
-            /*********************************************************************************************************/
-            /* RETURN
-             */
-         case 50: //r
-            if (c == 'e') {
-               mText += 'e';
-               state = 51;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-         case 51: //re
-            if (c == 't') {
-               mText += 't';
-               state = 52;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-         case 52: //ret
-            if (c == 'u') {
-               mText += 'u';
-               state = 53;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-         case 53: //retu
-            if (c == 'r') {
-               mText += 'r';
-               state = 54;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-         case 54: //retur
-            if (c == 'n') {
-               mText += 'n';
-               state = 55;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-         case 55: //return
-            if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_RETURN;
-            }
-            break;
+            case 16:
+                if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_NOT;
+                }
+                break;
 
 
-            /*********************************************************************************************************/
-            /* NIL
-             */
-         case 56: //ni
-            if (c == 'l') {
-               mText += 'l';
-               state = 57;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
+                /*********************************************************************************************************/
+                /* AND
+                 */
+            case 17: // a
+                if (c == 'n') {
+                    mText += 'n';
+                    state = 18;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
 
-         case 57: //nil
-            if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_NIL;
-            }
-            break;
+            case 18: // an
+                if (c == 'd') {
+                    mText += 'd';
+                    state = 19;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
 
-            /*********************************************************************************************************/
-            /* TO
-             */
-         case 59:
-            if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_TO;
-            }
-            break;
+            case 19: // and
+                if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_AND;
+                }
+                break;
+
+                /*********************************************************************************************************/
+                /* OR
+                 */
+            case 20: // o
+                if (c == 'r') {
+                    mText += 'r';
+                    state = 21;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+
+            case 21: // or
+                if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_OR;
+                }
+                break;
+
+                /*********************************************************************************************************/
+                /* TRUE
+                 */
+            case 22: // t
+                if (c == 'r') {
+                    mText += 'r';
+                    state = 23;
+                } else if (c == 'o') {
+                    mText += 'o';
+                    state = 59;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+
+            case 23: // tr
+                if (c == 'u') {
+                    mText += 'u';
+                    state = 24;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+
+            case 24: // tru
+                if (c == 'e') {
+                    mText += 'e';
+                    state = 25;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+
+            case 25: // true
+                if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_TRUE;
+                }
+                break;
+
+                /*********************************************************************************************************/
+                /* FOR/FALSE
+                 */
+            case 26: // f
+                if (c == 'a') {
+                    mText += 'a';
+                    state = 27;
+                } else if (c == 'o') {
+                    mText += 'o';
+                    state = 31;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+
+            case 27: // fa
+                if (c == 'l') {
+                    mText += 'l';
+                    state = 28;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+
+            case 28: // fal
+                if (c == 's') {
+                    mText += 's';
+                    state = 29;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+
+            case 29: // fals
+                if (c == 'e') {
+                    mText += 'e';
+                    state = 30;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+
+            case 30: // false
+                if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_FALSE;
+                }
+                break;
+
+            case 31: // fo
+                if (c == 'r') {
+                    mText += 'r';
+                    state = 32;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+
+            case 32: // for
+                if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_FOR;
+                }
+                break;
+
+                /*********************************************************************************************************/
+                /* DEF
+                 */
+            case 33: //d
+                if (c == 'e') {
+                    mText += 'e';
+                    state = 34;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+            case 34: //de
+                if (c == 'f') {
+                    mText += 'f';
+                    state = 35;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+            case 35:
+                if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_DEF;
+                }
+                break;
+                /*********************************************************************************************************/
+                /* WHILE
+                 */
+            case 36: //w
+                if (c == 'h') {
+                    mText += 'h';
+                    state = 37;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+            case 37: //wh
+                if (c == 'i') {
+                    mText += 'i';
+                    state = 38;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+            case 38: //whi
+                if (c == 'l') {
+                    mText += 'l';
+                    state = 39;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+            case 39: //whil
+                if (c == 'e') {
+                    mText += 'e';
+                    state = 40;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+            case 40: //while
+                if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_WHILE;
+                }
+                break;
+
+                /*********************************************************************************************************/
+                /* RETURN
+                 */
+            case 50: //r
+                if (c == 'e') {
+                    mText += 'e';
+                    state = 51;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+            case 51: //re
+                if (c == 't') {
+                    mText += 't';
+                    state = 52;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+            case 52: //ret
+                if (c == 'u') {
+                    mText += 'u';
+                    state = 53;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+            case 53: //retu
+                if (c == 'r') {
+                    mText += 'r';
+                    state = 54;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+            case 54: //retur
+                if (c == 'n') {
+                    mText += 'n';
+                    state = 55;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+            case 55: //return
+                if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_RETURN;
+                }
+                break;
 
 
-            /*********************************************************************************************************/
-            /* ASSIGNEMENT / EQUALS / NOT / NOTEQUALS
-             */
-         case 101:
-            if (c == '=') {
-               mText += '=';
-               return T_EQUALS;
-            } else {
-               mSource.unget();
-               return T_ASSIGNEMENT;
-            }
-            break;
-         case 102:
-            if (c == '=') {
-               mText += '=';
-               return T_NOTEQUALS;
-            } else { // error: no ! alone
-               mSource.unget();
-               throw LexicalErrorException(mLine, c);
-            }
+                /*********************************************************************************************************/
+                /* NIL
+                 */
+            case 56: //ni
+                if (c == 'l') {
+                    mText += 'l';
+                    state = 57;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
 
-            /*********************************************************************************************************/
-            /* <=, >=
-             */
-         case 103:
-            if (c == '=') { // >=
-               mText += '=';
-               return T_GREATER_EQUALS;
-            } else { // >
-               mSource.unget();
-               return T_GREATER;
-            }
-            break;
-         case 104:
-            if (c == '=') { // <=
-               mText += '=';
-               return T_LESSER_EQUALS;
-            } else { // <
-               mSource.unget();
-               return T_LESSER;
-            }
+            case 57: //nil
+                if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_NIL;
+                }
+                break;
 
-            /*********************************************************************************************************/
-            /* /= , One line comment
-             */
-         case 105:
-            if (c == '/') // //
-               state = 106;
-            else if (c == '=') {
-               mText += '=';
-               return T_SLASH_ASSIGNEMENT;
-            } else if (c == '*')
-               state = 107;
-            else {
-               mSource.unget();
-               return T_SLASH;
-            }
-            break;
+                /*********************************************************************************************************/
+                /* TO
+                 */
+            case 59:
+                if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_TO;
+                }
+                break;
 
-         case 106: // Skip the commento to the new line
-            if (c == '\n' || c == EOF) {
-               mSource.unget();
-               mText = "";
-               state = 0;
-            }
-            break;
 
-         case 107: // /* ... */
-            if (c == '*') {
-               state = 108;
-            }
-            break;
+                /*********************************************************************************************************/
+                /* ASSIGNEMENT / EQUALS / NOT / NOTEQUALS
+                 */
+            case 101:
+                if (c == '=') {
+                    mText += '=';
+                    return T_EQUALS;
+                } else {
+                    mSource.unget();
+                    return T_ASSIGNEMENT;
+                }
+                break;
+            case 102:
+                if (c == '=') {
+                    mText += '=';
+                    return T_NOTEQUALS;
+                } else { // error: no ! alone
+                    mSource.unget();
+                    throw LexicalErrorException(mLine, c);
+                }
 
-         case 108:
-            if (c == '/') {
-               mText = "";
-               state = 0;
-            }
-            break;
+                /*********************************************************************************************************/
+                /* <=, >=
+                 */
+            case 103:
+                if (c == '=') { // >=
+                    mText += '=';
+                    return T_GREATER_EQUALS;
+                } else { // >
+                    mSource.unget();
+                    return T_GREATER;
+                }
+                break;
+            case 104:
+                if (c == '=') { // <=
+                    mText += '=';
+                    return T_LESSER_EQUALS;
+                } else { // <
+                    mSource.unget();
+                    return T_LESSER;
+                }
 
-            /*********************************************************************************************************/
-            /* += -= *=
-             */
-         case 109:
-            if (c == '=') {
-               mText += '=';
-               return T_PLUS_ASSIGNEMENT;
-            } else {
-               mSource.unget();
-               return T_PLUS;
-            }
-            break;
-         case 110:
-            if (c == '=') {
-               mText += '=';
-               return T_MINUS_ASSIGNEMENT;
-            } else {
-               mSource.unget();
-               return T_MINUS;
-            }
-            break;
-         case 111:
-            if (c == '=') {
-               mText += '=';
-               return T_ASTERISK_ASSIGNEMENT;
-            } else {
-               mSource.unget();
-               return T_ASTERISK;
-            }
-            break;
-            /*********************************************************************************************************/
-            /* \ and \n, ignore newline
-             */
-         case 112:
-            if (c == '\n') {
-               // simply ignore
-               mLine++;
-               mText = "";
-               state = 0;
-            } else {
-               mSource.unget();
-               throw LexicalErrorException(mLine, c);
-            }
-            break;
-            /*********************************************************************************************************/
-            /* break
-             */
-         case 113: //b
-            if (c == 'r') {
-               mText += 'r';
-               state = 114;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-         case 114: //br
-            if (c == 'e') {
-               mText += 'e';
-               state = 115;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-         case 115: //bre
-            if (c == 'a') {
-               mText += 'a';
-               state = 116;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-         case 116: //brea
-            if (c == 'k') {
-               mText += 'k';
-               state = 117;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-         case 117: //break
-            if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_BREAK;
-            }
-            break;
+                /*********************************************************************************************************/
+                /* /= , One line comment
+                 */
+            case 105:
+                if (c == '/') // //
+                    state = 106;
+                else if (c == '=') {
+                    mText += '=';
+                    return T_SLASH_ASSIGNEMENT;
+                } else if (c == '*')
+                    state = 107;
+                else {
+                    mSource.unget();
+                    return T_SLASH;
+                }
+                break;
 
-            /*********************************************************************************************************/
-            /* continue
-             */
-         case 118: //c
-            if (c == 'o') {
-               mText += 'o';
-               state = 119;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-         case 119: //co
-            if (c == 'n') {
-               mText += 'n';
-               state = 120;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-         case 120: //con
-            if (c == 't') {
-               mText += 't';
-               state = 121;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-         case 121: //cont
-            if (c == 'i') {
-               mText += 'i';
-               state = 122;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-         case 122: //conti
-            if (c == 'n') {
-               mText += 'n';
-               state = 123;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-         case 123: //contin
-            if (c == 'u') {
-               mText += 'u';
-               state = 124;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-         case 124: //continu
-            if (c == 'e') {
-               mText += 'e';
-               state = 125;
-            } else if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_IDENTIFIER;
-            }
-            break;
-         case 125: //continue
-            if (isIdentifier(c)) {
-               mText += c;
-               state = 4;
-            } else {
-               mSource.unget();
-               return T_CONTINUE;
-            }
-            break;
+            case 106: // Skip the commento to the new line
+                if (c == '\n' || c == EOF) {
+                    mSource.unget();
+                    mText = "";
+                    state = 0;
+                }
+                break;
 
-            /*********************************************************************************************************/
-            /* symbols
-             */
-         case 126: // Symbol reading
-            if (isIdentifier(c))
-               mText += c;
-            else {
-               mSource.unget();
-               return T_STRING;
-            }
-            break;
-      }
-   }
-   return T_EOS;
+            case 107: // /* ... */
+                if (c == '*') {
+                    state = 108;
+                }
+                break;
+
+            case 108:
+                if (c == '/') {
+                    mText = "";
+                    state = 0;
+                }
+                break;
+
+                /*********************************************************************************************************/
+                /* += -= *=
+                 */
+            case 109:
+                if (c == '=') {
+                    mText += '=';
+                    return T_PLUS_ASSIGNEMENT;
+                } else {
+                    mSource.unget();
+                    return T_PLUS;
+                }
+                break;
+            case 110:
+                if (c == '=') {
+                    mText += '=';
+                    return T_MINUS_ASSIGNEMENT;
+                } else {
+                    mSource.unget();
+                    return T_MINUS;
+                }
+                break;
+            case 111:
+                if (c == '=') {
+                    mText += '=';
+                    return T_ASTERISK_ASSIGNEMENT;
+                } else {
+                    mSource.unget();
+                    return T_ASTERISK;
+                }
+                break;
+                /*********************************************************************************************************/
+                /* \ and \n, ignore newline
+                 */
+            case 112:
+                if (c == '\n') {
+                    // simply ignore
+                    mLine++;
+                    mText = "";
+                    state = 0;
+                } else {
+                    mSource.unget();
+                    throw LexicalErrorException(mLine, c);
+                }
+                break;
+                /*********************************************************************************************************/
+                /* break
+                 */
+            case 113: //b
+                if (c == 'r') {
+                    mText += 'r';
+                    state = 114;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+            case 114: //br
+                if (c == 'e') {
+                    mText += 'e';
+                    state = 115;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+            case 115: //bre
+                if (c == 'a') {
+                    mText += 'a';
+                    state = 116;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+            case 116: //brea
+                if (c == 'k') {
+                    mText += 'k';
+                    state = 117;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+            case 117: //break
+                if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_BREAK;
+                }
+                break;
+
+                /*********************************************************************************************************/
+                /* continue
+                 */
+            case 118: //c
+                if (c == 'o') {
+                    mText += 'o';
+                    state = 119;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+            case 119: //co
+                if (c == 'n') {
+                    mText += 'n';
+                    state = 120;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+            case 120: //con
+                if (c == 't') {
+                    mText += 't';
+                    state = 121;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+            case 121: //cont
+                if (c == 'i') {
+                    mText += 'i';
+                    state = 122;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+            case 122: //conti
+                if (c == 'n') {
+                    mText += 'n';
+                    state = 123;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+            case 123: //contin
+                if (c == 'u') {
+                    mText += 'u';
+                    state = 124;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+            case 124: //continu
+                if (c == 'e') {
+                    mText += 'e';
+                    state = 125;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+            case 125: //continue
+                if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_CONTINUE;
+                }
+                break;
+
+                /*********************************************************************************************************/
+                /* symbols
+                 */
+            case 126: // Symbol reading
+                if (isIdentifier(c))
+                    mText += c;
+                else {
+                    mSource.unget();
+                    return T_STRING;
+                }
+                break;
+
+                 /*********************************************************************************************************/
+                /* new
+                 */
+            case 127: //ne
+                if (c == 'w') {
+                    mText += 'w';
+                    state = 128;
+                } else if (isIdentifier(c)) {
+                    mText += c;
+                    state = 4;
+                } else {
+                    mSource.unget();
+                    return T_IDENTIFIER;
+                }
+                break;
+
+            case 128: // new
+                if (isIdentifier(c))
+                    mText += c;
+                else {
+                    mSource.unget();
+                    return T_NEW;
+                }
+                break;
+        }
+    }
+    return T_EOS;
 }

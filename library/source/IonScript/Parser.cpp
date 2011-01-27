@@ -42,9 +42,7 @@ Parser::Parser(std::istream& source) : mLexer(source) {
 void Parser::parse(SyntaxTree& tree) {
     mTokenType = mLexer.nextToken();
     block(tree, false);
-
     expect(Lexer::T_EOS);
-
 }
 
 //
@@ -578,6 +576,18 @@ void Parser::factor(SyntaxTree& tree) {
             return;
         }
 
+        case Lexer::T_NEW:
+            tree.type = SyntaxTree::TYPE_FUNCTION_CALL;
+            nextToken();
+            if (!mTokenType == Lexer::T_IDENTIFIER)
+                error();
+            tree.str = mLexer.getString() + "_new";
+            nextToken();
+            if (accept(Lexer::T_LEFT_ROUND_BRACKET)) {
+                params(tree);
+                expect(Lexer::T_RIGHT_ROUND_BRACKET);
+            }
+            return;
         default:
             error();
     }

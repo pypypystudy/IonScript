@@ -56,7 +56,7 @@ int main (int argc, char** argv) {
       VirtualMachine vm;
 
       HostFunctionGroupID hfgID = vm.registerHostFunctionGroup(moduleFunctions);
-      vm.setFunction("new_Foo", hfgID, CID_FOO_NEW, 2);
+      vm.setFunction("Foo_new", hfgID, CID_FOO_NEW, 2);
       vm.setFunction("sayHello", hfgID, CID_FOO_AND_BOO_SAY_HELLO, 1);
       vm.setFunction("getBoo", hfgID, CID_FOO_GET_BOO, 2);
       vm.setFunction("createBoo", hfgID, CID_FOO_CREATE_BOO, 1);

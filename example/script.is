@@ -1,5 +1,5 @@
-f1 = new_Foo("First", 1)
-f2 = new_Foo("Second", 3)
+f1 = new Foo("First", 1)
+f2 = new Foo("Second", 3)
 
 print ("*** begin of script *** ")
 

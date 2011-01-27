@@ -3,34 +3,33 @@
 # Licensed under GNU GPL license.
 
 TARGET_NAME := example
-PLATFORM := WIN
 
 SOURCE_DIR := source
 BIN_DIR := .
-BUILD_DIR := build/$(PLATFORM)
+BUILD_DIR := build
 
 INCLUDES := -I$(SOURCE_DIR) -I../library/source
 
 #Release Configuration. Simply type "make" to compile with this configuration.
-CFLAGS := -O3 -Wall -D$(PLATFORM)
-LDFLAGS := -L../library/bin/$(PLATFORM)
+CFLAGS := -O3 -Wall
+LDFLAGS := -L../library/bin
 LDLIBS := -lIonScript
 
 #Debug Configuration. Type "make debug" to compile with this configuration.
-CFLAGS_D := -g -O0 -Wall -DDEBUG -D$(PLATFORM)
-LDFLAGS_D := -L../library/bin/$(PLATFORM)
+CFLAGS_D := -g -O0 -Wall -DDEBUG
+LDFLAGS_D := -L../library/bin
 LDLIBS_D := -lIonScript_d
 
 #######DONT EDIT THIS PART IF YOU DONT KNOW EXACTLY WHAT YOU'RE DOING###########
 CC = g++
 
-ifeq ($(PLATFORM), WIN)
+ifdef WIN32
 	TARGET:= $(BIN_DIR)/$(TARGET_NAME).exe
 else
 	TARGET:= $(BIN_DIR)/$(TARGET_NAME)
 endif
 
-ifeq ($(PLATFORM), WIN)
+ifdef WIN32
 	TARGET_D:= $(BIN_DIR)/$(TARGET_NAME)_d.exe
 else
 	TARGET_D:= $(BIN_DIR)/$(TARGET_NAME)_d
