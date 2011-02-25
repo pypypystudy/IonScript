@@ -1,0 +1,7 @@
+// single line comment
+a = 1
+
+// single line comment with // other comment
+a = 2
+
+/* block comment with /* nested blocks */ fooooo /* /* */ */ */

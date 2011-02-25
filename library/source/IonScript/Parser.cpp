@@ -43,14 +43,7 @@ void Parser::parse(SyntaxTree& tree) {
 //
 
 void Parser::error() const {
-   std::string whatIsUnexpected;
-   if (mTokenType == Lexer::T_EOS)
-      whatIsUnexpected = "end of stream";
-   else if (mTokenType == Lexer::T_NEWLINE)
-      whatIsUnexpected = "newline";
-   else
-      whatIsUnexpected = "token \"" + mLexer.getString() + "\" found";
-   throw SyntaxError(mLexer.getLine(), whatIsUnexpected);
+   throw SyntaxError(mLexer.getLine(), mLexer.getColumn(), mTokenType, mLexer.getString());
 }
 
 void Parser::expect(Lexer::TokenType token) {
@@ -479,15 +472,9 @@ void Parser::factor(SyntaxTree& tree) {
          }
          return;
 
-      case Lexer::T_INTEGER:
+      case Lexer::T_NUMBER:
          tree.type = SyntaxTree::TYPE_NUMBER;
-         tree.number = mLexer.getIntegerValue();
-         nextToken();
-         return;
-
-      case Lexer::T_DECIMAL:
-         tree.type = SyntaxTree::TYPE_NUMBER;
-         tree.number = mLexer.getDecimalValue();
+         tree.number = mLexer.getTokenAsNumber();
          nextToken();
          return;
 

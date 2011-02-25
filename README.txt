@@ -1,6 +1,6 @@
 ** IonScript
 ** Canio Massimo Tristano, <massimo.tristano@gmail.com>
-** This software is released under a GPL + exception license. See COPYING for further informations.
+** This software is released under a zlib/libpng. See COPYING for further informations.
 
 	THERE IS NO WARRANTY FOR THIS LIBRARY. THE AUTHOR DECLINES EVERY RESPONSABILITY TO THE EVENTUAL DAMAGE THIS SOFWARE WOULD PRODUCE. BY USING THIS SOFTWARE YOU AGREE WITH THIS TERMS.
 	

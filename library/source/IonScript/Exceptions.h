@@ -29,66 +29,81 @@
 #include <exception>
 #include <cstdio>
 
+#include "Lexer.h"
+
 namespace ionscript {
 
-   class BadStreamException : public std::exception {
+   class IonScriptException : public std::exception {
    public:
-      BadStreamException(const std::string& message) throw () : mMessage(message) { }
-      virtual ~BadStreamException() throw () { };
+      IonScriptException() throw () { }
+      IonScriptException(const std::string& what) throw () : mWhat(what) { }
+      virtual ~IonScriptException() throw () { }
       const char* what() const throw () {
-         return mMessage.c_str();
+         return mWhat.c_str();
       }
-   private:
-      std::string mMessage;
+   protected:
+      std::string mWhat;
    };
 
-   /**
-    * Error thrown when an unexpected token is found during scanning.
-    */
-   class LexicalErrorException : public std::exception {
+   class BadStreamException : public IonScriptException {
    public:
-      LexicalErrorException(int lineNumber, char unexpectedChar) throw () : mLineNumber(lineNumber), mUnexpectedChar(unexpectedChar) {
-         std::stringstream ss;
-         if (unexpectedChar == EOF)
-            ss << "At line " << lineNumber << ": unexpected end-of-file found.";
+      BadStreamException() throw () : IonScriptException("Given stream is not good for reading.") { }
+   };
+
+   class CompileException : public IonScriptException {
+   public:
+      CompileException(size_t lineNumber, size_t column) throw () {
+         mMessageBuilder << "At line " << lineNumber << ":" << column << ": ";
+      }
+      CompileException(const CompileException& orig) throw () {
+         mMessageBuilder.str(mMessageBuilder.str());
+         mWhat = orig.mWhat;
+      }
+      ~CompileException() throw () { }
+      const char* what() const throw () {
+         return mMessageBuilder.str().c_str();
+      }
+      CompileException & operator=(const CompileException& orig) {
+         mMessageBuilder.str(mMessageBuilder.str());
+         mWhat = orig.mWhat;
+         return *this;
+      }
+   protected:
+      std::stringstream mMessageBuilder;
+   };
+
+   class LexicalError : public CompileException {
+   public:
+      LexicalError(size_t lineNumber, size_t column, char c) throw () : CompileException(lineNumber, column) {
+         if (c == EOF)
+            mMessageBuilder << "unexpected end-of-file found.";
          else
-            ss << "At line " << lineNumber << ": unexpected character \'" << unexpectedChar << "\' found.";
-         mMessage = ss.str();
+            mMessageBuilder << "unexpected character \'" << c << "\' found.";
       }
-      virtual ~LexicalErrorException() throw () { }
-      int getLineNumber() const throw () {
-         return mLineNumber;
-      }
-      char getFoundChar() const throw () {
-         return mUnexpectedChar;
-      }
-      const char* what() const throw () {
-         return mMessage.c_str();
-      }
-
-   private:
-      int mLineNumber;
-      char mUnexpectedChar;
-      std::string mMessage;
    };
 
-   class SyntaxError : public std::exception {
+   class SyntaxError : public CompileException {
    public:
-      SyntaxError(size_t line, const std::string& whatIsUnexpected) throw () : mLine(line) {
-         std::stringstream ss;
-         ss << "Parsing error: at line " << line << ", unexpected " << whatIsUnexpected << ".";
-         mMessage = ss.str();
+      SyntaxError(size_t lineNumber, size_t column, Lexer::TokenType tokenType, const std::string& tokenString) throw () : CompileException(lineNumber, column) {
+         mMessageBuilder << "unexpected ";
+         switch (tokenType) {
+            case Lexer::T_EOS:
+               mMessageBuilder << "end of stream";
+               break;
+            case Lexer::T_NEWLINE:
+               mMessageBuilder << "newline";
+               break;
+            case Lexer::T_NUMBER:
+               mMessageBuilder << "number " << tokenString;
+               break;
+            case Lexer::T_STRING:
+               mMessageBuilder << "string " << tokenString;
+               break;
+            default:
+               mMessageBuilder << "token \"" << tokenString << "\"";
+         }
+         mMessageBuilder << ".";
       }
-      virtual ~SyntaxError() throw () { }
-      size_t getLine() const throw () {
-         return mLine;
-      }
-      const char* what() const throw () {
-         return mMessage.c_str();
-      }
-   private:
-      size_t mLine;
-      std::string mMessage;
    };
 
    /**
@@ -96,49 +111,24 @@ namespace ionscript {
     * @param line
     * @param error message.
     */
-   class SemanticError : public std::exception {
+   class SemanticError : public CompileException {
    public:
-      SemanticError(size_t line, const std::string& error) throw () : mLine(line) {
-         std::stringstream ss;
-         ss << "Compiling error: at line " << line << ", " << error << ".";
-         mMessage = ss.str();
+      SemanticError(size_t lineNumber, size_t column, const std::string& error) throw () : CompileException(lineNumber, column) {
+         mMessageBuilder << error << ".";
       }
-      virtual ~SemanticError() throw () { }
-      size_t getLine() const throw () {
-         return mLine;
-      }
-      const char* what() const throw () {
-         return mMessage.c_str();
-      }
-   private:
-      std::string mMessage;
-      size_t mLine;
    };
 
    /**
     * Error that occurs during execution of bytecode and cannot be statically detected.
     */
-   class RuntimeError : public std::exception {
+   class RuntimeError : public IonScriptException {
    public:
-      RuntimeError(const std::string& error) throw () : mMessage("Runtime error: " + error) { }
-      virtual ~RuntimeError() throw () { }
-      const char* what() const throw () {
-         return mMessage.c_str();
-      }
-   private:
-      std::string mMessage;
-      size_t mLine;
+      RuntimeError(const std::string& error) throw () : IonScriptException("RuntimeError: " + error) { }
    };
 
-   class UndefinedGlobalVariableException : public std::exception {
+   class UndefinedGlobalVariableException : public IonScriptException {
    public:
-      UndefinedGlobalVariableException(const std::string& key) throw () : mMessage("Global variable " + key + " undefined.") { }
-      virtual ~UndefinedGlobalVariableException() throw () { }
-      const char* what() const throw () {
-         return mMessage.c_str();
-      }
-   private:
-      std::string mMessage;
+      UndefinedGlobalVariableException(const std::string& key) throw () : IonScriptException("Global variable " + key + " undefined.") { }
    };
 
 }

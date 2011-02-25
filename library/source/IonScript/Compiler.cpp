@@ -654,7 +654,7 @@ int Compiler::compile(const SyntaxTree& tree, BytecodeWriter& output, location_t
 }
 
 void Compiler::error(size_t line, const std::string & error) const {
-   throw SemanticError(line, error);
+   throw SemanticError(line, 0, error);
 }
 
 void Compiler::compileExpressionNodeChildren(const SyntaxTree& node, BytecodeWriter& output, location_t target, OpCode op) {
