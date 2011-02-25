@@ -1,30 +1,26 @@
-/***************************************************************************
- *   IonScript                                                             *
- *   Copyright (C) 2010 by Canio Massimo Tristano                          *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   As a special exception, if other files instantiate templates or use   *
- *   macros or inline functions from this file, or you compile this file   *
- *   and link it with other works to produce a work based on this file,    *
- *   this file does not by itself cause the resulting work to be covered   *
- *   by the GNU General Public License. However the source code for this   *
- *   file must still be made available in accordance with the GNU General  *
- *   Public License. This exception does not invalidate any other reasons  *
- *   why a work based on this file might be covered by the GNU General     *
- *   Public License.                                                       *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, see <http://www.gnu.org/licenses/>   *
- ***************************************************************************/
+/*******************************************************************************
+ * IonScript                                                                   *
+ * (c) 2010-2011 Canio Massimo Tristano <massimo.tristano@gmail.com>           *
+ *                                                                             *
+ * This software is provided 'as-is', without any express or implied           *
+ * warranty. In no event will the authors be held liable for any damages       *
+ * arising from the use of this software.                                      *
+ *                                                                             *
+ * Permission is granted to anyone to use this software for any purpose,       *
+ * including commercial applications, and to alter it and redistribute it      *
+ * freely, subject to the following restrictions:                              *
+ *                                                                             *
+ * 1. The origin of this software must not be misrepresented; you must not     *
+ * claim that you wrote the original software. If you use this software        *
+ * in a product, an acknowledgment in the product documentation would be       *
+ * appreciated but is not required.                                            *
+ *                                                                             *
+ * 2. Altered source versions must be plainly marked as such, and must not be  *
+ * misrepresented as being the original software.                              *
+ *                                                                             *
+ * 3. This notice may not be removed or altered from any source                *
+ * distribution.                                                               *
+ ******************************************************************************/
 
 #include "SyntaxTree.h"
 #include "Parser.h"
@@ -33,15 +29,15 @@
 #include <cstring>
 
 using namespace std;
-using namespace ion::script;
+using namespace ionscript;
 
-SyntaxTree::SyntaxTree () : mpParent (0) { }
+SyntaxTree::SyntaxTree() : mpParent(0) { }
 
-SyntaxTree::~SyntaxTree () {
+SyntaxTree::~SyntaxTree() {
    deleteChildren();
 }
 
-SyntaxTree* SyntaxTree::createChild () {
+SyntaxTree* SyntaxTree::createChild() {
    SyntaxTree* tree = new SyntaxTree();
    tree->mpParent = this;
    tree->sourceLineNumber = sourceLineNumber;
@@ -49,7 +45,7 @@ SyntaxTree* SyntaxTree::createChild () {
    return tree;
 }
 
-SyntaxTree* SyntaxTree::copyOnNewChild () {
+SyntaxTree* SyntaxTree::copyOnNewChild() {
    SyntaxTree* tree = new SyntaxTree();
 
    tree->mpParent = this;
@@ -68,7 +64,7 @@ SyntaxTree* SyntaxTree::copyOnNewChild () {
    return tree;
 }
 
-void SyntaxTree::replaceByChild (SyntaxTree& child) {
+void SyntaxTree::replaceByChild(SyntaxTree& child) {
    type = child.type;
    memcpy(&child.number, &number, sizeof (double));
    str = child.str;
@@ -93,7 +89,7 @@ void SyntaxTree::copyTo(SyntaxTree& tree) const {
       (*it)->copyTo(*tree.createChild());
 }
 
-void SyntaxTree::simplify () {
+void SyntaxTree::simplify() {
    // First simplify children
    std::list<SyntaxTree*>::iterator it;
    for (it = mChildren.begin(); it != mChildren.end(); ++it)
@@ -561,7 +557,7 @@ void SyntaxTree::simplify () {
    }
 }
 
-void SyntaxTree::dump (std::ostream& targetStream, const std::string& spacing) const {
+void SyntaxTree::dump(std::ostream& targetStream, const std::string& spacing) const {
    bool hs = false;
    list<SyntaxTree*>::const_iterator it;
    if (mpParent != 0)
@@ -680,14 +676,14 @@ void SyntaxTree::dump (std::ostream& targetStream, const std::string& spacing) c
 
 //
 
-void SyntaxTree::deleteChildren () {
+void SyntaxTree::deleteChildren() {
    std::list<SyntaxTree*>::iterator it;
    for (it = mChildren.begin(); it != mChildren.end(); ++it)
       delete *it;
    mChildren.clear();
 }
 
-void SyntaxTree::convertToBoolean (SyntaxTree& tree) {
+void SyntaxTree::convertToBoolean(SyntaxTree& tree) {
    switch (tree.type) {
       case TYPE_NIL:
          tree.type = TYPE_BOOLEAN;

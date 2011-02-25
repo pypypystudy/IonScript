@@ -1,30 +1,26 @@
-/***************************************************************************
- *   IonScript                                                             *
- *   Copyright (C) 2010 by Canio Massimo Tristano                          *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   As a special exception, if other files instantiate templates or use   *
- *   macros or inline functions from this file, or you compile this file   *
- *   and link it with other works to produce a work based on this file,    *
- *   this file does not by itself cause the resulting work to be covered   *
- *   by the GNU General Public License. However the source code for this   *
- *   file must still be made available in accordance with the GNU General  *
- *   Public License. This exception does not invalidate any other reasons  *
- *   why a work based on this file might be covered by the GNU General     *
- *   Public License.                                                       *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, see <http://www.gnu.org/licenses/>   *
- ***************************************************************************/
+/*******************************************************************************
+ * IonScript                                                                   *
+ * (c) 2010-2011 Canio Massimo Tristano <massimo.tristano@gmail.com>           *
+ *                                                                             *
+ * This software is provided 'as-is', without any express or implied           *
+ * warranty. In no event will the authors be held liable for any damages       *
+ * arising from the use of this software.                                      *
+ *                                                                             *
+ * Permission is granted to anyone to use this software for any purpose,       *
+ * including commercial applications, and to alter it and redistribute it      *
+ * freely, subject to the following restrictions:                              *
+ *                                                                             *
+ * 1. The origin of this software must not be misrepresented; you must not     *
+ * claim that you wrote the original software. If you use this software        *
+ * in a product, an acknowledgment in the product documentation would be       *
+ * appreciated but is not required.                                            *
+ *                                                                             *
+ * 2. Altered source versions must be plainly marked as such, and must not be  *
+ * misrepresented as being the original software.                              *
+ *                                                                             *
+ * 3. This notice may not be removed or altered from any source                *
+ * distribution.                                                               *
+ ******************************************************************************/
 
 #ifndef ION_SCRIPT_COMPILER_H
 #define	ION_SCRIPT_COMPILER_H
@@ -39,58 +35,56 @@
 #include <stack>
 #include <map>
 
-namespace ion {
-   namespace script {
+namespace ionscript {
 
+   /**
+    * Compiles the input syntax tree into executable bytecode.
+    * @param hostFunctionsMap the map that contains the callable host functions.
+    */
+   class Compiler {
+   public:
       /**
-       * Compiles the input syntax tree into executable bytecode.
+       * Constructs a new compiler specifing the callable host functions with the given HostFunctionMap.
        * @param hostFunctionsMap the map that contains the callable host functions.
        */
-      class Compiler {
-      public:
-         /**
-          * Constructs a new compiler specifing the callable host functions with the given HostFunctionMap.
-          * @param hostFunctionsMap the map that contains the callable host functions.
-          */
-         Compiler (const HostFunctionsMap& hostFunctionsMap);
+      Compiler(const HostFunctionsMap& hostFunctionsMap);
 
-         /**
-          * Compiles target SyntaxTree into an executable bytecode.
-          * @param tree input syntax tree generated by the Parser.
-          * @param output output bytecode.
-          */
-         void compile (const SyntaxTree& tree, BytecodeWriter& output);
+      /**
+       * Compiles target SyntaxTree into an executable bytecode.
+       * @param tree input syntax tree generated by the Parser.
+       * @param output output bytecode.
+       */
+      void compile(const SyntaxTree& tree, BytecodeWriter& output);
 
-      private:
+   private:
 
-         std::vector<std::string> mNamesStack;
+      std::vector<std::string> mNamesStack;
 
-         std::map<std::string, location_t> mScriptFunctionsLocations;
-         const HostFunctionsMap& mHostFunctionsMap;
+      std::map<std::string, location_t> mScriptFunctionsLocations;
+      const HostFunctionsMap& mHostFunctionsMap;
 
-         /* STATE */
-         std::stack<size_t> mActivationFramePointer;
-         std::stack<small_size_t> mnRequiredRegisters;
-         std::stack<small_size_t> mnBlockValueStackSize;
-         std::stack<small_size_t> mnLoopValueStackSize;
-         std::stack<bool> mDeclareOnly;
-         std::stack<bool> mVariableDeclarationAllowed;
-         std::stack<std::vector<index_t>* > mContinues;
-         std::stack<std::vector<index_t>* > mBreaks;
+      /* STATE */
+      std::stack<size_t> mActivationFramePointer;
+      std::stack<small_size_t> mnRequiredRegisters;
+      std::stack<small_size_t> mnBlockValueStackSize;
+      std::stack<small_size_t> mnLoopValueStackSize;
+      std::stack<bool> mDeclareOnly;
+      std::stack<bool> mVariableDeclarationAllowed;
+      std::stack<std::vector<index_t>* > mContinues;
+      std::stack<std::vector<index_t>* > mBreaks;
 
-         int compile (const SyntaxTree& tree, BytecodeWriter& output, location_t target);
-         void compileExpressionNodeChildren (const SyntaxTree& node, BytecodeWriter& output, location_t target, OpCode op);
+      int compile(const SyntaxTree& tree, BytecodeWriter& output, location_t target);
+      void compileExpressionNodeChildren(const SyntaxTree& node, BytecodeWriter& output, location_t target, OpCode op);
 
-         bool findLocalName (const std::string& name, location_t& outLocation) const;
-         void deleteValues (size_t stackSize, BytecodeWriter& output, bool deleteNames);
+      bool findLocalName(const std::string& name, location_t& outLocation) const;
+      void deleteValues(size_t stackSize, BytecodeWriter& output, bool deleteNames);
 
-         /* Auxiliary control functions*/
-         void checkComparisonConsistency (const SyntaxTree& tree) const;
+      /* Auxiliary control functions*/
+      void checkComparisonConsistency(const SyntaxTree& tree) const;
 
-         void error (size_t line, const std::string& error) const;
+      void error(size_t line, const std::string& error) const;
 
-      };
-   }
+   };
 }
 #endif	/* ION_SCRIPT_COMPILER_H */
 

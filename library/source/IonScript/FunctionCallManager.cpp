@@ -1,30 +1,26 @@
-/***************************************************************************
- * IonScript *
- * Copyright (C) 2010 by Canio Massimo Tristano *
- * *
- * This program is free software; you can redistribute it and/or modify *
- * it under the terms of the GNU General Public License as published by *
- * the Free Software Foundation; either version 2 of the License, or *
- * (at your option) any later version. *
- * *
- * This program is distributed in the hope that it will be useful, *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the *
- * GNU General Public License for more details. *
- * *
- * As a special exception, if other files instantiate templates or use *
- * macros or inline functions from this file, or you compile this file *
- * and link it with other works to produce a work based on this file, *
- * this file does not by itself cause the resulting work to be covered *
- * by the GNU General Public License. However the source code for this *
- * file must still be made available in accordance with the GNU General *
- * Public License. This exception does not invalidate any other reasons *
- * why a work based on this file might be covered by the GNU General *
- * Public License. *
- * *
- * You should have received a copy of the GNU General Public License *
- * along with this program; if not, see <http://www.gnu.org/licenses/> *
- ***************************************************************************/
+/*******************************************************************************
+ * IonScript                                                                   *
+ * (c) 2010-2011 Canio Massimo Tristano <massimo.tristano@gmail.com>           *
+ *                                                                             *
+ * This software is provided 'as-is', without any express or implied           *
+ * warranty. In no event will the authors be held liable for any damages       *
+ * arising from the use of this software.                                      *
+ *                                                                             *
+ * Permission is granted to anyone to use this software for any purpose,       *
+ * including commercial applications, and to alter it and redistribute it      *
+ * freely, subject to the following restrictions:                              *
+ *                                                                             *
+ * 1. The origin of this software must not be misrepresented; you must not     *
+ * claim that you wrote the original software. If you use this software        *
+ * in a product, an acknowledgment in the product documentation would be       *
+ * appreciated but is not required.                                            *
+ *                                                                             *
+ * 2. Altered source versions must be plainly marked as such, and must not be  *
+ * misrepresented as being the original software.                              *
+ *                                                                             *
+ * 3. This notice may not be removed or altered from any source                *
+ * distribution.                                                               *
+ ******************************************************************************/
 
 #include "FunctionCallManager.h"
 
@@ -35,14 +31,14 @@
 #include <vector>
 
 using namespace std;
-using namespace ion::script;
+using namespace ionscript;
 
-FunctionCallManager::FunctionCallManager (VirtualMachine& vm, FunctionID functionID, const Value* pArguments, size_t argumentsCount)
-: mVM (vm), mFunctionID (functionID), mpArguments (pArguments), mArgumentsCount (argumentsCount) { }
+FunctionCallManager::FunctionCallManager(VirtualMachine& vm, FunctionID functionID, const Value* pArguments, size_t argumentsCount)
+: mVM(vm), mFunctionID(functionID), mpArguments(pArguments), mArgumentsCount(argumentsCount) { }
 
-FunctionCallManager::~FunctionCallManager () { }
+FunctionCallManager::~FunctionCallManager() { }
 
-void FunctionCallManager::assertArgumentType (size_t index, int type) const {
+void FunctionCallManager::assertArgumentType(size_t index, int type) const {
    if (!(getArgument(index).getType() & type)) {
       stringstream ss;
 
@@ -65,7 +61,7 @@ void FunctionCallManager::assertArgumentType (size_t index, int type) const {
    }
 }
 
-void FunctionCallManager::assertArgumentObjectType (size_t index, const std::type_info& info) const {
+void FunctionCallManager::assertArgumentObjectType(size_t index, const std::type_info& info) const {
    assertArgumentType(0, Value::TYPE_OBJECT);
    if (!getArgument(index).checkObjectType(info)) {
       stringstream ss;
@@ -74,22 +70,22 @@ void FunctionCallManager::assertArgumentObjectType (size_t index, const std::typ
    }
 }
 
-void FunctionCallManager::returnNil () const {
+void FunctionCallManager::returnNil() const {
    mVM.returnValue(Value());
 }
 
-void FunctionCallManager::returnBoolean (bool value) const {
+void FunctionCallManager::returnBoolean(bool value) const {
    mVM.returnValue(Value(value));
 }
 
-void FunctionCallManager::returnNumber (double value) const {
+void FunctionCallManager::returnNumber(double value) const {
    mVM.returnValue(Value(value));
 }
 
-void FunctionCallManager::returnString (const std::string& value) const {
+void FunctionCallManager::returnString(const std::string& value) const {
    mVM.returnValue(Value(value));
 }
 
-void FunctionCallManager::returnValue (const Value& value) const {
+void FunctionCallManager::returnValue(const Value& value) const {
    mVM.returnValue(value);
 }

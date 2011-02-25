@@ -1,30 +1,26 @@
-/***************************************************************************
- *   IonScript                                                             *
- *   Copyright (C) 2010 by Canio Massimo Tristano                          *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   As a special exception, if other files instantiate templates or use   *
- *   macros or inline functions from this file, or you compile this file   *
- *   and link it with other works to produce a work based on this file,    *
- *   this file does not by itself cause the resulting work to be covered   *
- *   by the GNU General Public License. However the source code for this   *
- *   file must still be made available in accordance with the GNU General  *
- *   Public License. This exception does not invalidate any other reasons  *
- *   why a work based on this file might be covered by the GNU General     *
- *   Public License.                                                       *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, see <http://www.gnu.org/licenses/>   *
- ***************************************************************************/
+/*******************************************************************************
+ * IonScript                                                                   *
+ * (c) 2010-2011 Canio Massimo Tristano <massimo.tristano@gmail.com>           *
+ *                                                                             *
+ * This software is provided 'as-is', without any express or implied           *
+ * warranty. In no event will the authors be held liable for any damages       *
+ * arising from the use of this software.                                      *
+ *                                                                             *
+ * Permission is granted to anyone to use this software for any purpose,       *
+ * including commercial applications, and to alter it and redistribute it      *
+ * freely, subject to the following restrictions:                              *
+ *                                                                             *
+ * 1. The origin of this software must not be misrepresented; you must not     *
+ * claim that you wrote the original software. If you use this software        *
+ * in a product, an acknowledgment in the product documentation would be       *
+ * appreciated but is not required.                                            *
+ *                                                                             *
+ * 2. Altered source versions must be plainly marked as such, and must not be  *
+ * misrepresented as being the original software.                              *
+ *                                                                             *
+ * 3. This notice may not be removed or altered from any source                *
+ * distribution.                                                               *
+ ******************************************************************************/
 
 #include <vector>
 #include <stdlib.h>
@@ -35,11 +31,11 @@
 #include "Bytecode.h"
 
 using namespace std;
-using namespace ion::script;
+using namespace ionscript;
 
-BytecodeWriter::BytecodeWriter (std::vector<char>& output) : mOutput (output) { }
+BytecodeWriter::BytecodeWriter(std::vector<char>& output) : mOutput(output) { }
 
-void BytecodeWriter::set (size_t offset, unsigned int value) {
+void BytecodeWriter::set(size_t offset, unsigned int value) {
    assert(offset + 4 <= mOutput.size());
    mOutput[offset] = (char) (value >> 24);
    mOutput[offset + 1] = (char) ((value << 8) >> 24);
@@ -47,21 +43,21 @@ void BytecodeWriter::set (size_t offset, unsigned int value) {
    mOutput[offset + 3] = (char) ((value << 24) >> 24);
 }
 
-void BytecodeWriter::set (size_t offset, small_size_t value) {
+void BytecodeWriter::set(size_t offset, small_size_t value) {
    mOutput[offset] = value;
 }
 
-BytecodeWriter & BytecodeWriter::operator<< (char data) {
+BytecodeWriter & BytecodeWriter::operator<<(char data) {
    mOutput.push_back(data);
    return *this;
 }
 
-BytecodeWriter & BytecodeWriter::operator<< (small_size_t data) {
+BytecodeWriter & BytecodeWriter::operator<<(small_size_t data) {
    mOutput.push_back(data);
    return *this;
 }
 
-BytecodeWriter & BytecodeWriter::operator<< (int32_t data) {
+BytecodeWriter & BytecodeWriter::operator<<(int32_t data) {
    mOutput.push_back((char) (data >> 24));
    mOutput.push_back((char) ((data << 8) >> 24));
    mOutput.push_back((char) ((data << 16) >> 24));
@@ -70,7 +66,7 @@ BytecodeWriter & BytecodeWriter::operator<< (int32_t data) {
    return *this;
 }
 
-BytecodeWriter & BytecodeWriter::operator<< (uint32_t data) {
+BytecodeWriter & BytecodeWriter::operator<<(uint32_t data) {
    mOutput.push_back((char) (data >> 24));
    mOutput.push_back((char) ((data << 8) >> 24));
    mOutput.push_back((char) ((data << 16) >> 24));
@@ -79,7 +75,7 @@ BytecodeWriter & BytecodeWriter::operator<< (uint32_t data) {
    return *this;
 }
 
-BytecodeWriter & BytecodeWriter::operator<< (double data) {
+BytecodeWriter & BytecodeWriter::operator<<(double data) {
 
    union {
       double d;
@@ -95,13 +91,13 @@ BytecodeWriter & BytecodeWriter::operator<< (double data) {
    return *this;
 }
 
-BytecodeWriter & BytecodeWriter::operator<< (OpCode data) {
+BytecodeWriter & BytecodeWriter::operator<<(OpCode data) {
    mOutput.push_back(data);
 
    return *this;
 }
 
-BytecodeWriter & BytecodeWriter::operator<< (const std::string& data) {
+BytecodeWriter & BytecodeWriter::operator<<(const std::string& data) {
    std::string::const_iterator it = data.begin();
    for (; it != data.end(); ++it)
       mOutput.push_back(*it);
@@ -110,7 +106,7 @@ BytecodeWriter & BytecodeWriter::operator<< (const std::string& data) {
    return *this;
 }
 
-BytecodeWriter & BytecodeWriter::operator<< (bool data) {
+BytecodeWriter & BytecodeWriter::operator<<(bool data) {
    mOutput.push_back((data) ? 1 : 0);
 
    return *this;
@@ -119,18 +115,18 @@ BytecodeWriter & BytecodeWriter::operator<< (bool data) {
 
 //
 
-BytecodeReader::BytecodeReader (char* output) {
+BytecodeReader::BytecodeReader(char* output) {
    mOutput = output;
    mPosition = sizeof (unsigned int) * 2;
    *this >> mSize;
    mPosition = 0;
 }
 
-bool BytecodeReader::continues () const {
+bool BytecodeReader::continues() const {
    return mPosition < mSize;
 }
 
-void BytecodeReader::print (std::ostream& outStream) {
+void BytecodeReader::print(std::ostream& outStream) {
    size_t line = 0;
    mPosition = 0;
 
@@ -459,37 +455,38 @@ void BytecodeReader::print (std::ostream& outStream) {
    }
 }
 
-void BytecodeReader::setCursorPosition (index_t index) {
+void BytecodeReader::setCursorPosition(index_t index) {
    mPosition = index;
 }
 
-BytecodeReader & BytecodeReader::operator>> (char& data) {
+BytecodeReader & BytecodeReader::operator>>(char& data) {
    data = mOutput[mPosition++];
 
    return *this;
 }
 
-BytecodeReader & BytecodeReader::operator>> (small_size_t& data) {
+BytecodeReader & BytecodeReader::operator>>(small_size_t& data) {
    data = mOutput[mPosition++];
 
    return *this;
 }
 
-BytecodeReader & BytecodeReader::operator>> (int32_t& data) {
+BytecodeReader & BytecodeReader::operator>>(int32_t& data) {
    char* c = &mOutput[mPosition];
    data = (c[0] << 24) + ((c[1] & 0xFF) << 16) + ((c[2] & 0xFF) << 8) + (c[3] & 0xFF);
    mPosition += 4;
    return *this;
 }
 
-BytecodeReader & BytecodeReader::operator>> (uint32_t& data) {
+BytecodeReader & BytecodeReader::operator>>(uint32_t& data) {
    char* c = &mOutput[mPosition];
    data = (c[0] << 24) + ((c[1] & 0xFF) << 16) + ((c[2] & 0xFF) << 8) + (c[3] & 0xFF);
    mPosition += 4;
    return *this;
 }
 
-BytecodeReader & BytecodeReader::operator>> (double& data) {
+BytecodeReader & BytecodeReader::operator>>(double& data) {
+
    union {
       double d;
       char c[sizeof (double) ];
@@ -505,13 +502,13 @@ BytecodeReader & BytecodeReader::operator>> (double& data) {
    return *this;
 }
 
-BytecodeReader & BytecodeReader::operator>> (OpCode& data) {
+BytecodeReader & BytecodeReader::operator>>(OpCode& data) {
    data = (OpCode) (mOutput[mPosition++]);
 
    return *this;
 }
 
-BytecodeReader & BytecodeReader::operator>> (std::string& data) {
+BytecodeReader & BytecodeReader::operator>>(std::string& data) {
    data = "";
    char c;
    while ((c = mOutput[mPosition++]) != '\0')
@@ -520,7 +517,7 @@ BytecodeReader & BytecodeReader::operator>> (std::string& data) {
    return *this;
 }
 
-BytecodeReader & BytecodeReader::operator>> (bool& data) {
+BytecodeReader & BytecodeReader::operator>>(bool& data) {
    data = (mOutput[mPosition++]) != 0;
    return *this;
 }

@@ -1,30 +1,26 @@
-/***************************************************************************
- *   IonScript                                                             *
- *   Copyright (C) 2010 by Canio Massimo Tristano                          *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   As a special exception, if other files instantiate templates or use   *
- *   macros or inline functions from this file, or you compile this file   *
- *   and link it with other works to produce a work based on this file,    *
- *   this file does not by itself cause the resulting work to be covered   *
- *   by the GNU General Public License. However the source code for this   *
- *   file must still be made available in accordance with the GNU General  *
- *   Public License. This exception does not invalidate any other reasons  *
- *   why a work based on this file might be covered by the GNU General     *
- *   Public License.                                                       *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, see <http://www.gnu.org/licenses/>   *
- ***************************************************************************/
+/*******************************************************************************
+ * IonScript                                                                   *
+ * (c) 2010-2011 Canio Massimo Tristano <massimo.tristano@gmail.com>           *
+ *                                                                             *
+ * This software is provided 'as-is', without any express or implied           *
+ * warranty. In no event will the authors be held liable for any damages       *
+ * arising from the use of this software.                                      *
+ *                                                                             *
+ * Permission is granted to anyone to use this software for any purpose,       *
+ * including commercial applications, and to alter it and redistribute it      *
+ * freely, subject to the following restrictions:                              *
+ *                                                                             *
+ * 1. The origin of this software must not be misrepresented; you must not     *
+ * claim that you wrote the original software. If you use this software        *
+ * in a product, an acknowledgment in the product documentation would be       *
+ * appreciated but is not required.                                            *
+ *                                                                             *
+ * 2. Altered source versions must be plainly marked as such, and must not be  *
+ * misrepresented as being the original software.                              *
+ *                                                                             *
+ * 3. This notice may not be removed or altered from any source                *
+ * distribution.                                                               *
+ ******************************************************************************/
 
 #include "Compiler.h"
 #include "SyntaxTree.h"
@@ -35,10 +31,9 @@
 #include <map>
 
 using namespace std;
-using namespace ion::script;
+using namespace ionscript;
 
-Compiler::Compiler(const HostFunctionsMap& hostFunctionsMap) : mHostFunctionsMap(hostFunctionsMap) {
-}
+Compiler::Compiler(const HostFunctionsMap& hostFunctionsMap) : mHostFunctionsMap(hostFunctionsMap) { }
 
 void Compiler::compile(const SyntaxTree& tree, BytecodeWriter& output) {
    mNamesStack.clear();
@@ -75,8 +70,8 @@ int Compiler::compile(const SyntaxTree& tree, BytecodeWriter& output, location_t
          mnBlockValueStackSize.push(mNamesStack.size());
 
          for (list<SyntaxTree*>::const_iterator it = tree.getChildren().begin();
-            it != tree.getChildren().end();
-            ++it)
+                 it != tree.getChildren().end();
+                 ++it)
             compile(**it, output, target);
 
          deleteValues(mnBlockValueStackSize.top(), output, true);
@@ -361,7 +356,7 @@ int Compiler::compile(const SyntaxTree& tree, BytecodeWriter& output, location_t
 
                   // Make sure that the number of arguments falls within the range between minArgumentsCount and maxArgumentsCount.
                   if ((int) tree.getChildren().size() < info.minArgumentsCount ||
-                     (info.maxArgumentsCount != -1 && (int) tree.getChildren().size() > info.maxArgumentsCount)) {
+                          (info.maxArgumentsCount != -1 && (int) tree.getChildren().size() > info.maxArgumentsCount)) {
                      stringstream ss;
                      ss << "wrong number of arguments given. ";
                      if (info.maxArgumentsCount == -1)
@@ -720,15 +715,15 @@ void Compiler::deleteValues(size_t desiredStackSize, BytecodeWriter& output, boo
 
 void Compiler::checkComparisonConsistency(const SyntaxTree& tree) const {
    if (tree.left()->type == SyntaxTree::TYPE_NIL ||
-      tree.right()->type == SyntaxTree::TYPE_NIL)
+           tree.right()->type == SyntaxTree::TYPE_NIL)
       error(tree.sourceLineNumber, "cannot compare disequality of a nil value.");
    else if (tree.left()->type == SyntaxTree::TYPE_BOOLEAN ||
-      tree.right()->type == SyntaxTree::TYPE_BOOLEAN)
+           tree.right()->type == SyntaxTree::TYPE_BOOLEAN)
       error(tree.sourceLineNumber, "cannot compare disequality of a boolean.");
    else if ((tree.left()->type == SyntaxTree::TYPE_NUMBER ||
-      tree.left()->type == SyntaxTree::TYPE_STRING) && (
-      tree.right()->type == SyntaxTree::TYPE_NUMBER ||
-      tree.right()->type == SyntaxTree::TYPE_STRING) &&
-      tree.left()->type != tree.right()->type)
+           tree.left()->type == SyntaxTree::TYPE_STRING) && (
+           tree.right()->type == SyntaxTree::TYPE_NUMBER ||
+           tree.right()->type == SyntaxTree::TYPE_STRING) &&
+           tree.left()->type != tree.right()->type)
       error(tree.sourceLineNumber, "disequality involves operands of different type.");
 }

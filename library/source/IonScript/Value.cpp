@@ -1,31 +1,27 @@
-/***************************************************************************
- *   IonScript                                                             *
- *   Copyright (C) 2010 by Canio Massimo Tristano                          *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   As a special exception, if other files instantiate templates or use   *
- *   macros or inline functions from this file, or you compile this file   *
- *   and link it with other works to produce a work based on this file,    *
- *   this file does not by itself cause the resulting work to be covered   *
- *   by the GNU General Public License. However the source code for this   *
- *   file must still be made available in accordance with the GNU General  *
- *   Public License. This exception does not invalidate any other reasons  *
- *   why a work based on this file might be covered by the GNU General     *
- *   Public License.                                                       *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, see <http://www.gnu.org/licenses/>   *
- ***************************************************************************/
- 
+/*******************************************************************************
+ * IonScript                                                                   *
+ * (c) 2010-2011 Canio Massimo Tristano <massimo.tristano@gmail.com>           *
+ *                                                                             *
+ * This software is provided 'as-is', without any express or implied           *
+ * warranty. In no event will the authors be held liable for any damages       *
+ * arising from the use of this software.                                      *
+ *                                                                             *
+ * Permission is granted to anyone to use this software for any purpose,       *
+ * including commercial applications, and to alter it and redistribute it      *
+ * freely, subject to the following restrictions:                              *
+ *                                                                             *
+ * 1. The origin of this software must not be misrepresented; you must not     *
+ * claim that you wrote the original software. If you use this software        *
+ * in a product, an acknowledgment in the product documentation would be       *
+ * appreciated but is not required.                                            *
+ *                                                                             *
+ * 2. Altered source versions must be plainly marked as such, and must not be  *
+ * misrepresented as being the original software.                              *
+ *                                                                             *
+ * 3. This notice may not be removed or altered from any source                *
+ * distribution.                                                               *
+ ******************************************************************************/
+
 #include "Value.h"
 #include "Exceptions.h"
 
@@ -36,30 +32,30 @@
 #include <map>
 
 using namespace std;
-using namespace ion::script;
+using namespace ionscript;
 
-Value::Value () : mType (TYPE_NIL) { }
+Value::Value() : mType(TYPE_NIL) { }
 
-Value::Value (const Value& original) {
+Value::Value(const Value& original) {
    mType = TYPE_NIL;
    *this = original;
 }
 
-Value::Value (int value) : mType (TYPE_NUMBER), mNumber (value) { }
+Value::Value(int value) : mType(TYPE_NUMBER), mNumber(value) { }
 
-Value::Value (double value) : mType (TYPE_NUMBER), mNumber (value) { }
+Value::Value(double value) : mType(TYPE_NUMBER), mNumber(value) { }
 
-Value::Value (const char* value) : mType (TYPE_STRING), mpReferenceCount (new int(1)), mObjectPointer (new string (value)), mObjectTypeName (typeid (std::string).name ()) { }
+Value::Value(const char* value) : mType(TYPE_STRING), mpReferenceCount(new int(1)), mObjectPointer(new string(value)), mObjectTypeName(typeid (std::string).name()) { }
 
-Value::Value (const std::string& value) : mType (TYPE_STRING), mpReferenceCount (new int(1)), mObjectPointer (new string (value)), mObjectTypeName (typeid (std::string).name ()) { }
+Value::Value(const std::string& value) : mType(TYPE_STRING), mpReferenceCount(new int(1)), mObjectPointer(new string(value)), mObjectTypeName(typeid (std::string).name()) { }
 
-Value::Value (bool value) : mType (TYPE_BOOLEAN), mBoolean (value) { }
+Value::Value(bool value) : mType(TYPE_BOOLEAN), mBoolean(value) { }
 
-Value::~Value () {
+Value::~Value() {
    cleanup();
 }
 
-void Value::assertType (int type) const {
+void Value::assertType(int type) const {
    if (!(mType & type)) {
       stringstream ss;
 
@@ -82,12 +78,12 @@ void Value::assertType (int type) const {
    }
 }
 
-void Value::setNil () {
+void Value::setNil() {
    cleanup();
    mType = TYPE_NIL;
 }
 
-void Value::setFunctionValue (index_t functionIndex, unsigned char nArguments, unsigned char nRegisters) {
+void Value::setFunctionValue(index_t functionIndex, unsigned char nArguments, unsigned char nRegisters) {
    cleanup();
    mType = TYPE_SCRIPT_FUNCTION;
    this->mFunctionIndex = functionIndex;
@@ -95,13 +91,13 @@ void Value::setFunctionValue (index_t functionIndex, unsigned char nArguments, u
    this->mnArguments = nArguments;
 }
 
-List& Value::setEmptyList () {
+List& Value::setEmptyList() {
    List* pTree = new List();
    setList(pTree);
    return *pTree;
 }
 
-void Value::setList (List* pList) {
+void Value::setList(List* pList) {
    cleanup();
    mType = TYPE_LIST;
    mpReferenceCount = new int(1);
@@ -109,13 +105,13 @@ void Value::setList (List* pList) {
    mObjectTypeName = typeid (List).name();
 }
 
-Dictionary& Value::setEmptyDictionary () {
+Dictionary& Value::setEmptyDictionary() {
    Dictionary* pDictionary = new Dictionary();
    setDictionary(pDictionary);
    return *pDictionary;
 }
 
-void Value::setDictionary (Dictionary* pDictionary) {
+void Value::setDictionary(Dictionary* pDictionary) {
    cleanup();
    mType = TYPE_DICTIONARY;
    mpReferenceCount = new int(1);
@@ -123,7 +119,7 @@ void Value::setDictionary (Dictionary* pDictionary) {
    mObjectTypeName = typeid (Dictionary).name();
 }
 
-Value& Value::getDictionaryElement (const Value& value) const {
+Value& Value::getDictionaryElement(const Value& value) const {
    Dictionary::iterator it = reinterpret_cast<Dictionary*> (mObjectPointer)->find(value);
    if (it == reinterpret_cast<Dictionary*> (mObjectPointer)->end())
       throw RuntimeError("key error, " + value.toString() + ".");
@@ -131,7 +127,7 @@ Value& Value::getDictionaryElement (const Value& value) const {
       return it->second;
 }
 
-bool Value::toBoolean () const {
+bool Value::toBoolean() const {
    switch (mType) {
       case TYPE_NIL:
          return false;
@@ -160,7 +156,7 @@ bool Value::toBoolean () const {
    return false;
 }
 
-std::string Value::toString () const {
+std::string Value::toString() const {
    stringstream ss;
    switch (getType()) {
       case Value::TYPE_NIL:
@@ -219,7 +215,7 @@ std::string Value::toString () const {
    return ss.str();
 }
 
-Value & Value::operator= (const Value& original) {
+Value & Value::operator=(const Value& original) {
    cleanup();
    mType = original.mType;
 
@@ -260,21 +256,21 @@ Value & Value::operator= (const Value& original) {
    return *this;
 }
 
-Value & Value::operator= (int original) {
+Value & Value::operator=(int original) {
    cleanup();
    mType = TYPE_NUMBER;
    mNumber = original;
    return *this;
 }
 
-Value & Value::operator= (double original) {
+Value & Value::operator=(double original) {
    cleanup();
    mType = TYPE_NUMBER;
    mNumber = original;
    return *this;
 }
 
-Value & Value::operator= (const std::string & original) {
+Value & Value::operator=(const std::string & original) {
    cleanup();
    mType = TYPE_STRING;
    mpReferenceCount = new int(1);
@@ -282,14 +278,14 @@ Value & Value::operator= (const std::string & original) {
    return *this;
 }
 
-Value & Value::operator= (bool original) {
+Value & Value::operator=(bool original) {
    cleanup();
    mType = TYPE_BOOLEAN;
    mBoolean = original;
    return *this;
 }
 
-Value Value::operator+ (const Value & right) {
+Value Value::operator+(const Value & right) {
 
    if (right.mType == mType) {
       switch (mType) {
@@ -317,7 +313,7 @@ Value Value::operator+ (const Value & right) {
    return *this; // it never arrives here
 }
 
-Value Value::operator- (const Value & right) {
+Value Value::operator-(const Value & right) {
    if (mType == TYPE_NUMBER && right.mType == TYPE_NUMBER)
       return Value(mNumber - right.mNumber);
 
@@ -325,7 +321,7 @@ Value Value::operator- (const Value & right) {
    return *this; // it never arrives here
 }
 
-Value Value::operator* (const Value & right) {
+Value Value::operator*(const Value & right) {
    if (mType == TYPE_NUMBER && right.mType == TYPE_NUMBER)
       return Value(mNumber * right.mNumber);
 
@@ -358,26 +354,26 @@ Value Value::operator* (const Value & right) {
    return *this; // it never arrives here
 }
 
-Value Value::operator/ (const Value & right) {
+Value Value::operator/(const Value & right) {
    if (mType == TYPE_NUMBER && right.mType == TYPE_NUMBER)
       return Value(mNumber / right.mNumber);
    throwOperationError("divide", mType, right.mType);
    return *this; // it never arrives here
 }
 
-bool Value::operator ! () const {
+bool Value::operator !() const {
    return !toBoolean();
 }
 
-bool Value::operator && (const Value& right) const {
+bool Value::operator &&(const Value& right) const {
    return toBoolean() && right.toBoolean();
 }
 
-bool Value::operator || (const Value& right) const {
+bool Value::operator ||(const Value& right) const {
    return toBoolean() || right.toBoolean();
 }
 
-bool Value::operator== (const Value& right) const {
+bool Value::operator==(const Value& right) const {
    if (mType != right.mType)
       return false;
 
@@ -428,11 +424,11 @@ bool Value::operator== (const Value& right) const {
    }
 }
 
-bool Value::operator != (const Value& right) const {
+bool Value::operator !=(const Value& right) const {
    return !(*this == right);
 }
 
-bool Value::operator< (const Value& right) const {
+bool Value::operator<(const Value& right) const {
    if (mType != right.mType)
       throwOperationError("compare disequality of", mType, right.mType);
 
@@ -448,7 +444,7 @@ bool Value::operator< (const Value& right) const {
    return false;
 }
 
-bool Value::operator> (const Value& right) const {
+bool Value::operator>(const Value& right) const {
    if (mType != right.mType)
       throwOperationError("compare disequality of", mType, right.mType);
 
@@ -464,7 +460,7 @@ bool Value::operator> (const Value& right) const {
    return false;
 }
 
-bool Value::operator<= (const Value& right) const {
+bool Value::operator<=(const Value& right) const {
    if (mType != right.mType)
       throwOperationError("compare disequality of", mType, right.mType);
 
@@ -480,7 +476,7 @@ bool Value::operator<= (const Value& right) const {
    return false;
 }
 
-bool Value::operator>= (const Value& right) const {
+bool Value::operator>=(const Value& right) const {
    if (mType != right.mType)
       throwOperationError("compare disequality of", mType, right.mType);
 
@@ -496,7 +492,7 @@ bool Value::operator>= (const Value& right) const {
    return false;
 }
 
-const std::string& Value::getTypeName (Value::Type type) {
+const std::string& Value::getTypeName(Value::Type type) {
    static string nil = "Nil";
    static string boolean = "Boolean";
    static string number = "Number";
@@ -522,7 +518,7 @@ const std::string& Value::getTypeName (Value::Type type) {
 
 //
 
-void Value::cleanup () {
+void Value::cleanup() {
    if (mType == TYPE_STRING || mType == TYPE_LIST || mType == TYPE_DICTIONARY || (mType == TYPE_OBJECT && mpReferenceCount != 0)) {
       --(*mpReferenceCount);
       if (*mpReferenceCount <= 0) {
@@ -547,6 +543,6 @@ void Value::cleanup () {
    }
 }
 
-void Value::throwOperationError (const std::string& operation, Type firstValueType, Type secondValueType) const throw (RuntimeError) {
+void Value::throwOperationError(const std::string& operation, Type firstValueType, Type secondValueType) const throw (RuntimeError) {
    throw RuntimeError("cannot " + operation + " a " + getTypeName(firstValueType) + " with a " + getTypeName(secondValueType) + ".");
 }

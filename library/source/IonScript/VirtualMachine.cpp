@@ -1,30 +1,26 @@
-/***************************************************************************
- *   IonScript                                                             *
- *   Copyright (C) 2010 by Canio Massimo Tristano                          *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   As a special exception, if other files instantiate templates or use   *
- *   macros or inline functions from this file, or you compile this file   *
- *   and link it with other works to produce a work based on this file,    *
- *   this file does not by itself cause the resulting work to be covered   *
- *   by the GNU General Public License. However the source code for this   *
- *   file must still be made available in accordance with the GNU General  *
- *   Public License. This exception does not invalidate any other reasons  *
- *   why a work based on this file might be covered by the GNU General     *
- *   Public License.                                                       *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, see <http://www.gnu.org/licenses/>   *
- ***************************************************************************/
+/*******************************************************************************
+ * IonScript                                                                   *
+ * (c) 2010-2011 Canio Massimo Tristano <massimo.tristano@gmail.com>           *
+ *                                                                             *
+ * This software is provided 'as-is', without any express or implied           *
+ * warranty. In no event will the authors be held liable for any damages       *
+ * arising from the use of this software.                                      *
+ *                                                                             *
+ * Permission is granted to anyone to use this software for any purpose,       *
+ * including commercial applications, and to alter it and redistribute it      *
+ * freely, subject to the following restrictions:                              *
+ *                                                                             *
+ * 1. The origin of this software must not be misrepresented; you must not     *
+ * claim that you wrote the original software. If you use this software        *
+ * in a product, an acknowledgment in the product documentation would be       *
+ * appreciated but is not required.                                            *
+ *                                                                             *
+ * 2. Altered source versions must be plainly marked as such, and must not be  *
+ * misrepresented as being the original software.                              *
+ *                                                                             *
+ * 3. This notice may not be removed or altered from any source                *
+ * distribution.                                                               *
+ ******************************************************************************/
 
 #include "VirtualMachine.h"
 #include "Exceptions.h"
@@ -37,7 +33,7 @@
 #include <vector>
 #include <map>
 
-using namespace ion::script;
+using namespace ionscript;
 using namespace std;
 
 enum {
@@ -54,7 +50,7 @@ enum {
    BFID_ERROR,
 };
 
-VirtualMachine::VirtualMachine () : mpProgram (0) {
+VirtualMachine::VirtualMachine() : mpProgram(0) {
    HostFunctionGroupID hfgID = registerHostFunctionGroup(builtinsGroup);
    setFunction("print", hfgID, BFID_PRINT, 0, -1);
    setFunction("post", hfgID, BFID_POST, 1);
@@ -69,17 +65,17 @@ VirtualMachine::VirtualMachine () : mpProgram (0) {
    setFunction("error", hfgID, BFID_ERROR, 1);
 }
 
-VirtualMachine::~VirtualMachine () {
+VirtualMachine::~VirtualMachine() {
    if (mpProgram)
       delete mpProgram;
 }
 
-HostFunctionGroupID VirtualMachine::registerHostFunctionGroup (HostFunction function) {
+HostFunctionGroupID VirtualMachine::registerHostFunctionGroup(HostFunction function) {
    mHostFunctionGroups.push_back(function);
    return mHostFunctionGroups.size() - 1;
 }
 
-void VirtualMachine::setFunction (const std::string& name, HostFunctionGroupID hostFunctionID, FunctionID functionID, int minArgumentsCount, int maxArgumentsCount) {
+void VirtualMachine::setFunction(const std::string& name, HostFunctionGroupID hostFunctionID, FunctionID functionID, int minArgumentsCount, int maxArgumentsCount) {
    if (maxArgumentsCount == -2 || (maxArgumentsCount != -1 && maxArgumentsCount < minArgumentsCount))
       maxArgumentsCount = minArgumentsCount;
 
@@ -92,19 +88,19 @@ void VirtualMachine::setFunction (const std::string& name, HostFunctionGroupID h
    mHostFunctionsMap[name] = info;
 }
 
-void VirtualMachine::post (const std::string& name, const Value& value) {
+void VirtualMachine::post(const std::string& name, const Value& value) {
    mGlobalVariables[name] = value;
 }
 
-bool VirtualMachine::hasGlobalVariable (const std::string& name) const {
+bool VirtualMachine::hasGlobalVariable(const std::string& name) const {
    return mGlobalVariables.find(name) != mGlobalVariables.end();
 }
 
-void VirtualMachine::undefineVariable (const std::string& name) {
+void VirtualMachine::undefineVariable(const std::string& name) {
    mGlobalVariables.erase(name);
 }
 
-Value& VirtualMachine::get (const std::string& name) {
+Value& VirtualMachine::get(const std::string& name) {
    map<string, Value>::iterator it = mGlobalVariables.find(name);
    if (it == mGlobalVariables.end())
       throw UndefinedGlobalVariableException(name);
@@ -112,12 +108,12 @@ Value& VirtualMachine::get (const std::string& name) {
       return it->second;
 }
 
-void VirtualMachine::compile (std::istream& source, std::vector<char>& output) {
+void VirtualMachine::compile(std::istream& source, std::vector<char>& output) {
    SyntaxTree tree;
    compile(source, output, tree);
 }
 
-void VirtualMachine::compile (std::istream& source, std::vector<char>& output, SyntaxTree& tree) {
+void VirtualMachine::compile(std::istream& source, std::vector<char>& output, SyntaxTree& tree) {
    Parser parser(source);
    parser.parse(tree);
    BytecodeWriter writer(output);
@@ -125,7 +121,7 @@ void VirtualMachine::compile (std::istream& source, std::vector<char>& output, S
    compiler.compile(tree, writer);
 }
 
-void VirtualMachine::run (char* program) {
+void VirtualMachine::run(char* program) {
    delete mpProgram;
    mpProgram = new BytecodeReader(program);
 
@@ -154,24 +150,24 @@ void VirtualMachine::run (char* program) {
       mState = STATE_FINISHED;
 }
 
-void VirtualMachine::compileAndRun (const std::string& filename) {
+void VirtualMachine::compileAndRun(const std::string& filename) {
    ifstream source(filename.c_str());
    compileAndRun(source);
 }
 
-void VirtualMachine::compileAndRun (std::istream& source) {
+void VirtualMachine::compileAndRun(std::istream& source) {
    std::vector<char> bytecode;
    SyntaxTree tree;
    compile(source, bytecode, tree);
    run(&bytecode[0]);
 }
 
-void VirtualMachine::pause () {
+void VirtualMachine::pause() {
    if (mState == STATE_RUNNING)
       mState = STATE_PAUSED;
 }
 
-void VirtualMachine::goOn () {
+void VirtualMachine::goOn() {
    if (mState != STATE_PAUSED)
       return;
 
@@ -185,17 +181,17 @@ void VirtualMachine::goOn () {
       mState = STATE_FINISHED;
 }
 
-Value VirtualMachine::callScriptFunction (const Value& function, const Value& argument) {
+Value VirtualMachine::callScriptFunction(const Value& function, const Value& argument) {
    const Value * arguments[] = {&argument};
    return callScriptFunction(function, arguments, 1);
 }
 
-Value VirtualMachine::callScriptFunction (const Value& function, const Value& argument1, const Value& argument2) {
+Value VirtualMachine::callScriptFunction(const Value& function, const Value& argument1, const Value& argument2) {
    const Value * arguments[] = {&argument1, &argument2};
    return callScriptFunction(function, arguments, 2);
 }
 
-Value VirtualMachine::callScriptFunction (const Value& function, const Value** argument, size_t nArguments) {
+Value VirtualMachine::callScriptFunction(const Value& function, const Value** argument, size_t nArguments) {
    function.assertType(Value::TYPE_SCRIPT_FUNCTION);
 
    // Check whether the required number of arguments corresponds to the one given.
@@ -232,7 +228,7 @@ Value VirtualMachine::callScriptFunction (const Value& function, const Value** a
    return result;
 }
 
-void VirtualMachine::dump (std::ostream & output) {
+void VirtualMachine::dump(std::ostream & output) {
    output << "Values-Stack:\n";
    for (size_t i = 0; i < mValues.size(); ++i)
       output << "   " << i << ", " << (long) i - (long) mActivations.back().firstVariableLocation << ") " << mValues[i].toString() << "\n";
@@ -242,15 +238,15 @@ void VirtualMachine::dump (std::ostream & output) {
    size_t i = 0;
    for (; it != mActivations.end(); ++it) {
       output << "   " << i << ") " <<
-         "return-index : " << it->returnIndex << ";" <<
-         "stack-size: " << it->stackSize << ";" <<
-         "first-variable-loc: " << it->firstVariableLocation << "\n";
+              "return-index : " << it->returnIndex << ";" <<
+              "stack-size: " << it->stackSize << ";" <<
+              "first-variable-loc: " << it->firstVariableLocation << "\n";
       i++;
    }
 }
 //
 
-void VirtualMachine::executeInstruction () {
+void VirtualMachine::executeInstruction() {
    OpCode op;
    *mpProgram >> op;
 
@@ -678,11 +674,11 @@ void VirtualMachine::executeInstruction () {
    }
 }
 
-void VirtualMachine::error (const std::string & message) const {
+void VirtualMachine::error(const std::string & message) const {
    throw RuntimeError(message);
 }
 
-void VirtualMachine::returnValue (const Value & value) {
+void VirtualMachine::returnValue(const Value & value) {
    if (mState != STATE_WAITING_FOR_RETURN)
       throw RuntimeError("cannot return a value if a host function has not been called.");
 
@@ -693,7 +689,7 @@ void VirtualMachine::returnValue (const Value & value) {
    mState = STATE_PAUSED;
 }
 
-void VirtualMachine::builtinsGroup (const FunctionCallManager & manager) {
+void VirtualMachine::builtinsGroup(const FunctionCallManager & manager) {
    switch (manager.getFunctionID()) {
       case BFID_PRINT:
          for (size_t i = 0; i < manager.getArgumentsCount(); i++) {

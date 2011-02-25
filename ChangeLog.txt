@@ -1,4 +1,22 @@
 * Change log
+	* 0.17
+		* License changed to a clearer zlib/png.
+		* Namespace changed from ion::script to ionscript.
+		* Lexer rewritten.
+		
+	* 0.16.1
+		* When you want to run some already prepared bytecode you have to pass a
+    pointer to your first byte (char*) to the run() method. Bytecode also
+    has a header composed by a magic number to check whether it's a real
+    bytecode (and not just a bunch of random bytes), a version number, so
+    that a bytecode can be run only on VirtualMachines with equal or higher
+    version and the whole bytecode size.
+		* Folder renaming to IonScript.
+		* Sample IonScript integration application.
+		* A bunch of new handy methods for retrieving typed values from Values safely so that the type is first checked before returning it and an exception is raised if type mismatches. You can avoid now using the assert*() functions in FunctionCallMethod and use these safe methods for a cleaner, lighter and faster code. A new class called Managed<> has been introduced for managing custom C++ classes that do not implement the IManageableObject interface.
+		* VirtualMachine now has a state and a goOn() method to continue execution after it is paused. The example now uses the safe value getters for less and more readable code.
+		* Bug fixes.
+		
 	* 0.15.1
 		* You can call script-functions from within your C++ application by the VirtualMachine::callScriptFunction() method.
 		* error() builtin function supported. It throws a runtime error message.

@@ -1,31 +1,26 @@
-/***************************************************************************
- *   IonScript                                                             *
- *   Copyright (C) 2010 by Canio Massimo Tristano                          *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   As a special exception, if other files instantiate templates or use   *
- *   macros or inline functions from this file, or you compile this file   *
- *   and link it with other works to produce a work based on this file,    *
- *   this file does not by itself cause the resulting work to be covered   *
- *   by the GNU General Public License. However the source code for this   *
- *   file must still be made available in accordance with the GNU General  *
- *   Public License. This exception does not invalidate any other reasons  *
- *   why a work based on this file might be covered by the GNU General     *
- *   Public License.                                                       *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, see <http://www.gnu.org/licenses/>   *
- ***************************************************************************/
-
+/*******************************************************************************
+ * IonScript                                                                   *
+ * (c) 2010-2011 Canio Massimo Tristano <massimo.tristano@gmail.com>           *
+ *                                                                             *
+ * This software is provided 'as-is', without any express or implied           *
+ * warranty. In no event will the authors be held liable for any damages       *
+ * arising from the use of this software.                                      *
+ *                                                                             *
+ * Permission is granted to anyone to use this software for any purpose,       *
+ * including commercial applications, and to alter it and redistribute it      *
+ * freely, subject to the following restrictions:                              *
+ *                                                                             *
+ * 1. The origin of this software must not be misrepresented; you must not     *
+ * claim that you wrote the original software. If you use this software        *
+ * in a product, an acknowledgment in the product documentation would be       *
+ * appreciated but is not required.                                            *
+ *                                                                             *
+ * 2. Altered source versions must be plainly marked as such, and must not be  *
+ * misrepresented as being the original software.                              *
+ *                                                                             *
+ * 3. This notice may not be removed or altered from any source                *
+ * distribution.                                                               *
+ ******************************************************************************/
 
 #ifndef ION_SCRIPT_BYTECODE_H
 #define	ION_SCRIPT_BYTECODE_H
@@ -37,62 +32,55 @@
 #include <vector>
 #include <stdint.h>
 
-namespace ion {
+namespace ionscript {
 
-   namespace script {
+   class BytecodeWriter {
+   public:
+      BytecodeWriter(std::vector<char>& output);
+      void set(size_t offset, unsigned int value);
+      void set(size_t offset, unsigned char value);
+      size_t getSize() const {
+         return mOutput.size();
+      }
+      BytecodeWriter & operator<<(char data);
+      BytecodeWriter & operator<<(unsigned char data);
+      BytecodeWriter & operator<<(int32_t data);
+      BytecodeWriter & operator<<(uint32_t data);
+      BytecodeWriter & operator<<(double data);
+      BytecodeWriter & operator<<(OpCode data);
+      BytecodeWriter & operator<<(const std::string& data);
+      BytecodeWriter & operator<<(bool data);
 
-      // NOTE: These two classes are temporary and are gonna be replaced by a 
-      // memorystream class soon.
+   private:
+      std::vector<char>& mOutput;
+   };
 
-      class BytecodeWriter {
-      public:
-         BytecodeWriter (std::vector<char>& output);
-         void set (size_t offset, unsigned int value);
-         void set (size_t offset, unsigned char value);
-         size_t getSize () const {
-            return mOutput.size();
-         }
-         BytecodeWriter & operator<< (char data);
-         BytecodeWriter & operator<< (unsigned char data);
-         BytecodeWriter & operator<< (int32_t data);
-         BytecodeWriter & operator<< (uint32_t data);
-         BytecodeWriter & operator<< (double data);
-         BytecodeWriter & operator<< (OpCode data);
-         BytecodeWriter & operator<< (const std::string& data);
-         BytecodeWriter & operator<< (bool data);
+   class BytecodeReader {
+   public:
+      BytecodeReader(char* output);
+      size_t getCursorPosition() const {
+         return mPosition;
+      }
 
-      private:
-         std::vector<char>& mOutput;
-      };
+      void setCursorPosition(index_t index);
 
-      class BytecodeReader {
-      public:
-         BytecodeReader (char* output);
-         size_t getCursorPosition () const {
-            return mPosition;
-         }
+      bool continues() const;
+      void print(std::ostream& outStream);
 
-         void setCursorPosition (index_t index);
+      BytecodeReader & operator>>(char& data);
+      BytecodeReader & operator>>(unsigned char& data);
+      BytecodeReader & operator>>(int32_t& data);
+      BytecodeReader & operator>>(uint32_t& data);
+      BytecodeReader & operator>>(double& data);
+      BytecodeReader & operator>>(OpCode& data);
+      BytecodeReader & operator>>(std::string& data);
+      BytecodeReader & operator>>(bool& data);
 
-         bool continues () const;
-         void print (std::ostream& outStream);
-
-         BytecodeReader & operator>> (char& data);
-         BytecodeReader & operator>> (unsigned char& data);
-         BytecodeReader & operator>> (int32_t& data);
-         BytecodeReader & operator>> (uint32_t& data);
-         BytecodeReader & operator>> (double& data);
-         BytecodeReader & operator>> (OpCode& data);
-         BytecodeReader & operator>> (std::string& data);
-         BytecodeReader & operator>> (bool& data);
-
-      private:
-         size_t mPosition;
-         size_t mSize;
-         char* mOutput;
-      };
-
-   }
+   private:
+      size_t mPosition;
+      size_t mSize;
+      char* mOutput;
+   };
 }
 #endif	/* ION_SCRIPT_BYTECODE_H */
 
